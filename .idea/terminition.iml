@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/loopAnalysis/termLoopPass.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/loopAnalysis/termLoopPass.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/main.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/searchTree/Common.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/searchTree/Common.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/searchTree/Node.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/searchTree/Node.h" isTestSource="false" />

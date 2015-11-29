@@ -11,7 +11,7 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 SET(CMAKE_CXX_FLAGS_DEBUG  "-Wall -fno-rtti -O0 -g")
 
-set(SOURCE_FILES main.cpp searchTree/Node.cpp searchTree/Common.h loopAnalysis/termLoopPass.cpp)
+set(SOURCE_FILES main.cpp searchTree/Node.cpp searchTree/Common.h loopAnalysis/termLoopPass.cpp searchTree/Common.cpp)
 add_executable(terminition ${SOURCE_FILES})
 
 include_directories(${LLVM_INCLUDE_DIRS} .)

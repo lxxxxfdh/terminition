@@ -4,8 +4,6 @@
 #include <iostream>
 #include "termLoopPass.h"
 #include "searchTree/Node.h"
-#include "llvm/IR/Instruction.h"
-#include "llvm/IR/Instructions.h"
 #include <stack>
 using namespace llvm;
 using namespace termloop;
@@ -19,73 +17,7 @@ namespace llvm
 
 namespace termloop {
 
-    struct condition{
-        Value* controlVar;
-        cmpSymbol sym;
-        Value* c;
-        condition():controlVar(nullptr),sym(other),c(nullptr){}
-        void output(){
-            errs()<<"Control Variable: "<<controlVar->getName()<<"\r\n";
-            errs()<<"Symbole: "<<(cmpSymbol)sym<<"\r\n";
-            errs()<<"C: "<< *c<<"\r\n";
 
-        }
-    };
-
-
-    //whether the var is changing in the loop iteration
-    //coarse implementation
-    bool isIterativeVar(Value* var){
-        if(isa<PHINode>(var))
-            return true;
-        else
-            return false;
-    }
-
-
-
-    //find the condition with the form x~c ~ is {<,<=,>,>=}
-    //tag: 0 normal, 1 reverse
-    //coarse implementation
-    struct condition checkCond(ICmpInst* inst, int tag){
-        Value* v1=inst->getOperand(0);
-        Value* v2=inst->getOperand(1);
-        cmpSymbol conData[2][5]={{cmpSymbol::get,cmpSymbol::gt,cmpSymbol::let,cmpSymbol::lt,cmpSymbol::other},
-                                 {cmpSymbol::lt,cmpSymbol::gt,cmpSymbol::gt,cmpSymbol::get,cmpSymbol::other}};
-
-        condition cond;
-        if(isIterativeVar(v1)&&!isIterativeVar(v2)){
-            cond.controlVar=v1;
-            cond.c=v2;
-            cmpSymbol  cm;
-            cond.controlVar=v1;
-            cond.c=v2;
-            switch (inst->getPredicate()){
-                case ICmpInst::ICMP_UGE:
-                case ICmpInst::ICMP_SGE:
-                    cm=cmpSymbol::get;
-                    break;
-                case ICmpInst::ICMP_ULT:
-                case ICmpInst::ICMP_SLT:
-                    cm=cmpSymbol::lt;
-                    break;
-                case ICmpInst::ICMP_ULE:
-                case ICmpInst::ICMP_SLE:
-                    cm=cmpSymbol::let;
-                    break;
-                case ICmpInst::ICMP_UGT:
-                case ICmpInst::ICMP_SGT:
-                    cm=cmpSymbol::gt;
-                    break;
-                default:
-                    cm=cmpSymbol::other;
-            }
-            cond.sym=conData[tag][cm];
-
-        }
-        return cond;
-
-    }
     // Analysis the unique exit condition
     // True for the matched form, other false
     bool controlVarAnalysis(Loop* l){
@@ -141,9 +73,6 @@ namespace termloop {
 
             }else
                 return false;
-
-
-
         }
         return false;
     }
@@ -158,8 +87,8 @@ namespace termloop {
         vector<BasicBlock*> first;
         first.push_back(header);
         paths.push(&first);
-        vector<BasicBlock*> already;
-        already.push_back(header);
+      //  vector<BasicBlock*> already;
+       // already.push_back(header);
 
         while(!trave.empty()){
             vector<BasicBlock*> *path=paths.top();
@@ -172,14 +101,14 @@ namespace termloop {
             for(succ_iterator it=succ_begin(bb);it!=succ_end(bb);it++){
                 BasicBlock* bl=*it;
                // errs()<<*bl<<"\r\n";
-                if(!l->contains(bl)||isInVector(&already,bl))
+                if(!l->contains(bl)||isInVector(path,bl))
                     continue;
                 vector<BasicBlock*> *tmp=new vector<BasicBlock*>();
                 //errs()<<path->begin()-path->end();
                 std::copy(path->begin(),path->end(), std::back_inserter(*tmp));
                 tmp->push_back(bl);
                 hasChildren=true;
-                already.push_back(bl);
+               // already.push_back(bl);
                 trave.push(bl);
 
                 paths.push(tmp);
@@ -205,7 +134,7 @@ namespace termloop {
         }else if(root->type==unsupport){
             cout<<"Not Support Loop\r\n";
             return;
-        }else if(root->type==controlabove){
+        }else if(root->type==controlabove||root->type==empty){
 
         }else if(root->type==monotonic){
             Node::monotonicCompute();
