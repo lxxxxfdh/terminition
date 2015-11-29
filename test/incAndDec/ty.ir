@@ -1,0 +1,10 @@
+#!/bin/bash
+
+myvar='hello world'
+myvar=$1
+myvar="${myvar%.*}" 
+clang -S -emit-llvm "$myvar".c -o ""$myvar".ll"
+opt -mem2reg -S ""$myvar".ll" -o ""$myvar"reg.ll"
+rm -f ""$myvar".ll"
+
+

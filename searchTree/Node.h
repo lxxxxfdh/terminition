@@ -24,6 +24,7 @@ namespace termloop {
     public:
         bool pathAbove;
         monotonicity increase;
+        satiType initialSat;
         Value *b;
         Value *con_var;
         Value* c1;
@@ -34,11 +35,13 @@ namespace termloop {
         Path(vector<BasicBlock *> *vb, Value *var) : edges(*vb), con_var(var) {
             step = UNOWN;
             increase = unknown;
+            initialSat = nonfixed;
         }
 
         Path(Value *var, cmpSymbol sym, vector<BasicBlock *> *vb) : con_var(var), cmp(sym), edges(*vb) {
             step = UNOWN;
             increase = unknown;
+            initialSat = nonfixed;
         }
 
         BasicBlock *getPrev(BasicBlock *bb) {
@@ -82,8 +85,25 @@ namespace termloop {
             return true;
         }
 
+        bool cmpInt(ConstantInt* init1, ConstantInt* c, cmpSymbol cm){
+            switch(cm){
+                case other:
+                    assert(false);
+                case gt:
+                    return init1>c;
+                case get:
+                    return init1>=c;
+
+                case lt:
+                    return init1<c;
+                case let:
+                   return init1<=c;
+
+            }
+        }
+
         //find the x~c1
-        void branConditionHandle(vector<BasicBlock *> *outBlocks) {
+        void branConditionHandle(vector<BasicBlock *> *outBlocks, Value* cv) {
 
 
             ICmpInst* icmp=nullptr;
@@ -105,7 +125,10 @@ namespace termloop {
                     it--;
                     if(icmp=dyn_cast<ICmpInst>(br->getOperand(0))){
                         condition con=checkCond(icmp,tag);
+
                         assert(con_var==con.controlVar);
+
+
                         c1=con.c;
                         cmp=con.sym;
                         switch(con.sym){
@@ -121,6 +144,12 @@ namespace termloop {
                                 break;
 
                         }
+                        //errs()<<*cv<<"\r\n"<<*con.c;
+                        ConstantInt *initial=dyn_cast<ConstantInt>(cv);
+
+                        ConstantInt *cc1=dyn_cast<ConstantInt>(con.c);
+                        if(initial!=nullptr&& cc1!=nullptr)
+                            initialSat=cmpInt(initial,cc1,cmp)? satisfied:unsatisfied;
                     } else
                         assert(false);
                 } else
@@ -129,8 +158,8 @@ namespace termloop {
 
         }
 
-        void computeIncrease(vector<BasicBlock *> *outBlocks) {
-            branConditionHandle(outBlocks);
+        void computeIncrease(vector<BasicBlock *> *outBlocks, Value* cv) {
+            branConditionHandle(outBlocks,cv);
 
             if (PHINode *phi = dyn_cast<PHINode>(con_var)) {
                 Value *v = getValueForPhi(phi);
@@ -142,16 +171,19 @@ namespace termloop {
                    // errs() << *v << "\r\n";
                    // errs()<<*con_var<<"\r\n";
                     if (v == con_var) {
+
                         if (isMul) {
                             //not consider the mul change symbol
                         } else {
-                            step = change;
-                            increase = step > 0 ? increasing : decreasing;
+
+                            increase = change > 0 ? increasing : decreasing;
+                            step = abs(change);
                             break;
 
                         }
                     }
                     if (BinaryOperator *bop = dyn_cast<BinaryOperator>(v)) {
+
                         Value *v1 = bop->getOperand(0);
                         Value *v2 = bop->getOperand(1);
                         Value *tempVal = nullptr;
@@ -249,9 +281,12 @@ namespace termloop {
             for (vector<Path *>::iterator it = paths->begin(); it != paths->end(); it++) {
                 Path *p = *it;
                 if(p->increase==unknown)
-                    p->computeIncrease(outBlocks);
+                    p->computeIncrease(outBlocks,con_var);
                 //p->dump();
+
+
             }
+
         }
 
     };

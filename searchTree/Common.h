@@ -13,6 +13,9 @@ using namespace std;
 using namespace llvm;
 namespace termloop {
     const int UNOWN=-99999;
+    enum satiType{
+        satisfied, unsatisfied, nonfixed
+    };
 
     enum nodeType {
         pathnum, monotonic, controlabove, result, empty, unsupport
