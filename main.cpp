@@ -18,7 +18,7 @@ int main() {
     LLVMContext &Context = getGlobalContext();
     SMDiagnostic Err;
     char* p1="/home/xie/terminition_test/testreg.ll";
-    p1="/home/xie/terminition_test/single/belowIncSinglereg.ll"; //aboveDecSinglereg.ll  belowDecSinglereg.ll   aboveIncSinglereg.ll  belowIncSinglereg.ll
+    p1="/home/xie/ClionProjects/terminition/test/aboveIncreg.ll"; //aboveDecSinglereg.ll  belowDecSinglereg.ll   aboveIncSinglereg.ll  belowIncSinglereg.ll
     std::unique_ptr<Module> Mod = parseIRFile(p1, Err, Context);
 
     //traverse(root);
