@@ -101,6 +101,20 @@ int incStep(int x, int step, int c1){
 int decStep(int x, int step, int c1){
     return c1-step+(x-c1)%step;
 }
+bool symbolCmp(int x,int y,cmpSymbol sym){
+    switch (sym){
+        case lt:
+            return x<y;
+        case let:
+            return x<=y;
+        case cmpSymbol:: get:
+            return x>=y;
+        case gt:
+            return x>y;
+        default:
+            assert(false);
+    }
+}
 Node* incAndConsSplit(Node* pa){
     vector<Path*>::iterator it=Node::paths->begin();
     it++;
@@ -118,9 +132,9 @@ Node* incAndConsSplit(Node* pa){
                 assert(b!= nullptr&&c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
                 int bb=b->getZExtValue(), cc=c->getZExtValue(),cc1=c1->getZExtValue(),convar=cons_var->getZExtValue();
                 if(p1->initialSat==satisfied){//x|=B
-                    if(incStep(convar,p1->step,cc1)<=cc){
-                        if(bb<=cc){
-                            if(bb>cc1||incStep(bb,p1->step,cc1)<=cc)
+                    if(symbolCmp(incStep(convar,p1->step,cc1),cc,Node::cmp) ){
+                        if(symbolCmp(bb,cc,Node::cmp)){
+                            if(symbolCmp(bb,cc1,p2->cmp)|| symbolCmp(incStep(bb,p1->step,cc1),cc,Node::cmp))
                                 return pa->next[1];
                             else
                                 return pa->next[0];
@@ -131,8 +145,8 @@ Node* incAndConsSplit(Node* pa){
                         return pa->next[0];
 
                 }else{
-                    if(bb<=cc){
-                        if(bb>cc1||incStep(bb,p1->step,cc1)<=cc)
+                    if(symbolCmp(bb,cc,Node::cmp)){
+                        if(symbolCmp(bb,cc1,p2->cmp)||symbolCmp(incStep(bb,p1->step,cc1),cc,Node::cmp))
                             return pa->next[1];
 
                         else
@@ -146,7 +160,7 @@ Node* incAndConsSplit(Node* pa){
 
             }else{ //x<c, x<c1 f1 <-
                 assert(b!= nullptr&&c!= nullptr&&cons_var!= nullptr);
-                if(p1->initialSat==satisfied||b->getZExtValue()<=c->getZExtValue())
+                if(p1->initialSat==satisfied||  symbolCmp(b->getZExtValue(),c->getZExtValue(),Node::cmp))
                     return pa->next[1];
                 else
                     return pa->next[0];
@@ -157,14 +171,14 @@ Node* incAndConsSplit(Node* pa){
         }else{
             if(p1->increase==increasing){  //x<c, x>c1 f1->
                 assert(b!= nullptr&&c!= nullptr&&c1!=nullptr);
-                if(p1->initialSat==unsatisfied&&b<=c&&b<c1)
+                if(p1->initialSat==unsatisfied&&symbolCmp(b->getZExtValue(),c->getZExtValue(),Node::cmp)&&symbolCmp(b->getZExtValue(),c->getZExtValue(),p2->cmp))
                     return pa->next[0];
                 else
                     return pa->next[1];
 
             }else{ //x<c, x>c1 f1 <-
                 assert(b!= nullptr&&c!= nullptr);
-                if(b->getZExtValue()<=c->getZExtValue())
+                if(symbolCmp(b->getZExtValue(),c->getZExtValue(),Node::cmp))
                     return pa->next[1];
                 else
                     return pa->next[0];
@@ -177,14 +191,14 @@ Node* incAndConsSplit(Node* pa){
         if(p1->pathAbove){
             if(p1->increase==increasing){ //x>c, x<c1 f1 ->
                 assert(b!= nullptr&&c!= nullptr);
-                if(b->getZExtValue()>=c->getZExtValue())
+                if(symbolCmp(b->getZExtValue(),c->getZExtValue(),Node::cmp))
                     return pa->next[1];
                 else
                     return pa->next[0];
 
             }else{ //x>c, x<c1 f1 <-
                 assert(b!= nullptr&&c!= nullptr&&c1!=nullptr);
-                if(p1->initialSat==unsatisfied&&b>=c&&b>c1)
+                if(p1->initialSat==unsatisfied&&symbolCmp(b->getZExtValue(),c->getZExtValue(),Node::cmp)&&symbolCmp(b->getZExtValue(),c1->getZExtValue(),p2->cmp))
                     return pa->next[0];
                 else
                     return pa->next[1];
@@ -194,7 +208,7 @@ Node* incAndConsSplit(Node* pa){
         }else{
             if(p1->increase==increasing){ //x>c, x>c1 f1 ->
                 assert(b!= nullptr&&c!= nullptr&&cons_var!= nullptr);
-                if(p1->initialSat==satisfied||b->getZExtValue()>=c->getZExtValue())
+                if(p1->initialSat==satisfied||symbolCmp(b->getZExtValue(),c->getZExtValue(),Node::cmp))
                     return pa->next[1];
                 else
                     return pa->next[0];
@@ -203,9 +217,9 @@ Node* incAndConsSplit(Node* pa){
                 assert(b!= nullptr&&c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
                 int bb=b->getZExtValue(), cc=c->getZExtValue(),cc1=c1->getZExtValue(),convar=cons_var->getZExtValue();
                 if(p1->initialSat==satisfied){//x|=B
-                    if(decStep(convar,p1->step,cc1)>=cc){
-                        if(bb>=cc){
-                            if(bb<cc1||decStep(bb,p1->step,cc1)>=cc)
+                    if(symbolCmp(decStep(convar,p1->step,cc1),cc,Node::cmp) ){
+                        if(symbolCmp(bb,cc,Node::cmp)){
+                            if(symbolCmp(bb,cc1,p2->cmp)||symbolCmp(decStep(bb,p1->step,cc1),cc,Node::cmp))
                                 return pa->next[1];
                             else
                                 return pa->next[0];
@@ -216,8 +230,9 @@ Node* incAndConsSplit(Node* pa){
                         return pa->next[0];
 
                 }else{
-                    if(bb<=cc){
-                        if(bb<cc1||decStep(bb,p1->step,cc1)>=cc)
+                    if(symbolCmp(bb,cc,Node::cmp)){
+                        if(symbolCmp(bb,cc1,p2->cmp)||symbolCmp(decStep(bb,p1->step,cc1),cc,Node::cmp))
+
                             return pa->next[1];
 
                         else
@@ -247,11 +262,11 @@ Node* incAndDecSplit(Node* pa){
     ConstantInt* c1=dyn_cast<ConstantInt>(p1->c1);
     ConstantInt* cons_var=dyn_cast<ConstantInt>(Node::convar_value);
     if(Node::controlAbove){
-        if(p1->pathAbove){
+        if(p1->pathAbove){ //x<c x<c1 p1-> p2<-
             assert(c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
             int cc=c->getZExtValue();
             int cc1=c->getZExtValue();
-            if(cc1<=cc&&((cc-cc1+1)>=p1->step))
+            if(symbolCmp(cc1,cc,Node::cmp)&&(symbolCmp(cc-cc1,p1->step,p2->cmp)))   //????right
                 return pa->next[1];
             else
                 return pa->next[0];
@@ -267,18 +282,21 @@ Node* incAndDecSplit(Node* pa){
 
     }else{
         if(p1->pathAbove){
+            assert(c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
+            int cc=c->getZExtValue();
+            int cc1=c->getZExtValue();
+            if(symbolCmp(cc1,cc,Node::cmp)&&(symbolCmp(cc-cc1,p2->step,p2->cmp)))    //?????????
+                return pa->next[1];
+            else
+                return pa->next[0];
+
+        }else{   // x>c x>c1 p1-> p2<-
             if(p1->initialSat==satisfied)
                 return pa->next[1];
             else
                 return pa->next[0];
-        }else{
-            assert(c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
-            int cc=c->getZExtValue();
-            int cc1=c->getZExtValue();
-            if(cc1>=cc&&((cc1-cc+1)>=p2->step))
-                return pa->next[1];
-            else
-                return pa->next[0];
+
+
 
 
         }
