@@ -266,10 +266,20 @@ Node* incAndDecSplit(Node* pa){
             assert(c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
             int cc=c->getZExtValue();
             int cc1=c->getZExtValue();
-            if(symbolCmp(cc1,cc,Node::cmp)&&(symbolCmp(cc-cc1,p1->step,p2->cmp)))   //????right
+            if(Node::cmp==lt){
+                if((p1->cmp==lt&&cc-cc1>p1->step)||(p1->cmp==let&&cc-cc1>=p1->step))
+                        return pa->next[1];
+
+            }else if(Node::cmp==let){
+                if((p1->cmp==let&&cc-cc1+1>=p1->step)||(p1->cmp==lt&&cc-cc1+1>p1->step))
+                            return pa->next[1];
+
+            }
+            return pa->next[0];
+            /*if(symbolCmp(cc1,cc,Node::cmp)&&(symbolCmp(cc-cc1,p1->step,p2->cmp)))   //????right
                 return pa->next[1];
             else
-                return pa->next[0];
+                return pa->next[0];*/
 
         }else{
             if(p1->initialSat!=satisfied)
@@ -285,10 +295,20 @@ Node* incAndDecSplit(Node* pa){
             assert(c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
             int cc=c->getZExtValue();
             int cc1=c->getZExtValue();
-            if(symbolCmp(cc1,cc,Node::cmp)&&(symbolCmp(cc-cc1,p2->step,p2->cmp)))    //?????????
+            if(Node::cmp==gt){
+                if((p1->cmp==lt&&cc1-cc>p2->step)||(p1->cmp==let&&cc1-cc>=p2->step))
+                        return pa->next[1];
+
+            }else if(Node::cmp==cmpSymbol:: get){
+                if((p1->cmp==let&&cc1-cc+1>=p2->step)||(p1->cmp==lt&&cc1-cc+1>p2->step))
+                    return pa->next[1];
+
+            }
+            return pa->next[0];
+            /*if(symbolCmp(cc1,cc,Node::cmp)&&(symbolCmp(cc-cc1,p2->step,p2->cmp)))    //?????????
                 return pa->next[1];
             else
-                return pa->next[0];
+                return pa->next[0];*/
 
         }else{   // x>c x>c1 p1-> p2<-
             if(p1->initialSat==satisfied)
@@ -317,66 +337,12 @@ Node* consAndConsSplit(Node* pa){
     ConstantInt* b2=dyn_cast<ConstantInt>(p2->b);
     assert(c!= nullptr&&c1!=nullptr&&cons_var!= nullptr&&b1!=nullptr&&b2!= nullptr);
     int cc=c->getZExtValue(),cc1=c1->getZExtValue(),bb1=b1->getZExtValue(),bb2=b2->getZExtValue();
-    if(Node::controlAbove){
-        if(p1->pathAbove){
-            if(p1->initialSat==satisfied){
-                if(bb1<=cc&&(bb1<=cc1||bb2<=cc))
+    if((p1->initialSat==satisfied&&symbolCmp(bb1,cc,Node::cmp)&&symbolCmp(bb1,cc1,p1->cmp))||
+            (p1->initialSat==unsatisfied&&symbolCmp(bb2,cc,Node::cmp)&&symbolCmp(bb2,cc1,p2->cmp))||
+            (symbolCmp(bb1,cc,Node::cmp)&&symbolCmp(bb2,cc,Node::cmp))
+            )
                     return pa->next[1];
-                else
-                    return pa->next[0];
-            }else{
-                if(bb2<=cc&&(bb2>cc1||bb1<=cc))
-                    return pa->next[1];
-                return pa->next[0];
-
-            }
-
-        }else{
-            if(p1->initialSat==satisfied){
-                if(bb1<=cc&&(bb1>=cc1||bb2<=cc))
-                    return pa->next[1];
-                else
-                    return pa->next[0];
-            }else{
-                if(bb2<=cc&&(bb2<cc1||bb1<=cc))
-                    return pa->next[1];
-                return pa->next[0];
-
-            }
-
-
-        }
-
-    }else{
-        if(p1->pathAbove){
-            if(p1->initialSat==satisfied){
-                if(bb1>=cc&&(bb1<=cc1||bb2>=cc))
-                    return pa->next[1];
-                else
-                    return pa->next[0];
-            }else{
-                if(bb2>=cc&&(bb2>cc1||bb1>=cc))
-                    return pa->next[1];
-                return pa->next[0];
-
-            }
-        }else{
-            if(p1->initialSat==satisfied){
-                if(bb1>=cc&&(bb1>=cc1||bb2>=cc))
-                    return pa->next[1];
-                else
-                    return pa->next[0];
-            }else{
-                if(bb2>=cc&&(bb2<cc1||bb1>=cc))
-                    return pa->next[1];
-                return pa->next[0];
-
-            }
-
-
-        }
-    }
-
+    return pa->next[0];
 }
 Node* termloop::constructTree(){
 
