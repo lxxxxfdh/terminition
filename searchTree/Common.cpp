@@ -12,7 +12,20 @@ bool termloop::isIterativeVar(Value* var){
 }
 
 
-
+bool termloop::symbolCmp(int x,int y,cmpSymbol sym){
+    switch (sym){
+        case lt:
+            return x<y;
+        case let:
+            return x<=y;
+        case cmpSymbol:: get:
+            return x>=y;
+        case gt:
+            return x>y;
+        default:
+            assert(false);
+    }
+}
 
 struct condition  termloop::checkCond(ICmpInst* inst, int tag){
     Value* v1=inst->getOperand(0);

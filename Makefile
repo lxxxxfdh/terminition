@@ -111,29 +111,29 @@ terminition/fast:
 	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/build
 .PHONY : terminition/fast
 
-loopAnalsis/termLoopPass.o: loopAnalsis/termLoopPass.cpp.o
-.PHONY : loopAnalsis/termLoopPass.o
+loopAnalysis/termLoopPass.o: loopAnalysis/termLoopPass.cpp.o
+.PHONY : loopAnalysis/termLoopPass.o
 
 # target to build an object file
-loopAnalsis/termLoopPass.cpp.o:
-	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o
-.PHONY : loopAnalsis/termLoopPass.cpp.o
+loopAnalysis/termLoopPass.cpp.o:
+	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o
+.PHONY : loopAnalysis/termLoopPass.cpp.o
 
-loopAnalsis/termLoopPass.i: loopAnalsis/termLoopPass.cpp.i
-.PHONY : loopAnalsis/termLoopPass.i
+loopAnalysis/termLoopPass.i: loopAnalysis/termLoopPass.cpp.i
+.PHONY : loopAnalysis/termLoopPass.i
 
 # target to preprocess a source file
-loopAnalsis/termLoopPass.cpp.i:
-	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.i
-.PHONY : loopAnalsis/termLoopPass.cpp.i
+loopAnalysis/termLoopPass.cpp.i:
+	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.i
+.PHONY : loopAnalysis/termLoopPass.cpp.i
 
-loopAnalsis/termLoopPass.s: loopAnalsis/termLoopPass.cpp.s
-.PHONY : loopAnalsis/termLoopPass.s
+loopAnalysis/termLoopPass.s: loopAnalysis/termLoopPass.cpp.s
+.PHONY : loopAnalysis/termLoopPass.s
 
 # target to generate assembly for a file
-loopAnalsis/termLoopPass.cpp.s:
-	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.s
-.PHONY : loopAnalsis/termLoopPass.cpp.s
+loopAnalysis/termLoopPass.cpp.s:
+	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.s
+.PHONY : loopAnalysis/termLoopPass.cpp.s
 
 main.o: main.cpp.o
 .PHONY : main.o
@@ -158,6 +158,30 @@ main.s: main.cpp.s
 main.cpp.s:
 	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/main.cpp.s
 .PHONY : main.cpp.s
+
+searchTree/Common.o: searchTree/Common.cpp.o
+.PHONY : searchTree/Common.o
+
+# target to build an object file
+searchTree/Common.cpp.o:
+	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/searchTree/Common.cpp.o
+.PHONY : searchTree/Common.cpp.o
+
+searchTree/Common.i: searchTree/Common.cpp.i
+.PHONY : searchTree/Common.i
+
+# target to preprocess a source file
+searchTree/Common.cpp.i:
+	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/searchTree/Common.cpp.i
+.PHONY : searchTree/Common.cpp.i
+
+searchTree/Common.s: searchTree/Common.cpp.s
+.PHONY : searchTree/Common.s
+
+# target to generate assembly for a file
+searchTree/Common.cpp.s:
+	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/searchTree/Common.cpp.s
+.PHONY : searchTree/Common.cpp.s
 
 searchTree/Node.o: searchTree/Node.cpp.o
 .PHONY : searchTree/Node.o
@@ -192,12 +216,15 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... terminition"
-	@echo "... loopAnalsis/termLoopPass.o"
-	@echo "... loopAnalsis/termLoopPass.i"
-	@echo "... loopAnalsis/termLoopPass.s"
+	@echo "... loopAnalysis/termLoopPass.o"
+	@echo "... loopAnalysis/termLoopPass.i"
+	@echo "... loopAnalysis/termLoopPass.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... searchTree/Common.o"
+	@echo "... searchTree/Common.i"
+	@echo "... searchTree/Common.s"
 	@echo "... searchTree/Node.o"
 	@echo "... searchTree/Node.i"
 	@echo "... searchTree/Node.s"

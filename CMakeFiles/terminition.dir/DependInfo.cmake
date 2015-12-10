@@ -6,6 +6,7 @@ SET(CMAKE_DEPENDS_LANGUAGES
 SET(CMAKE_DEPENDS_CHECK_CXX
   "/home/xie/ClionProjects/terminition/loopAnalysis/termLoopPass.cpp" "/home/xie/ClionProjects/terminition/CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o"
   "/home/xie/ClionProjects/terminition/main.cpp" "/home/xie/ClionProjects/terminition/CMakeFiles/terminition.dir/main.cpp.o"
+  "/home/xie/ClionProjects/terminition/searchTree/Common.cpp" "/home/xie/ClionProjects/terminition/CMakeFiles/terminition.dir/searchTree/Common.cpp.o"
   "/home/xie/ClionProjects/terminition/searchTree/Node.cpp" "/home/xie/ClionProjects/terminition/CMakeFiles/terminition.dir/searchTree/Node.cpp.o"
   )
 SET(CMAKE_CXX_COMPILER_ID "GNU")
@@ -23,6 +24,7 @@ SET(CMAKE_TARGET_LINKED_INFO_FILES
 # The include file search paths:
 SET(CMAKE_C_TARGET_INCLUDE_PATH
   "/usr/local/include"
+  "."
   )
 SET(CMAKE_CXX_TARGET_INCLUDE_PATH ${CMAKE_C_TARGET_INCLUDE_PATH})
 SET(CMAKE_Fortran_TARGET_INCLUDE_PATH ${CMAKE_C_TARGET_INCLUDE_PATH})

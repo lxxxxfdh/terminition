@@ -2,6 +2,7 @@ FILE(REMOVE_RECURSE
   "CMakeFiles/terminition.dir/main.cpp.o"
   "CMakeFiles/terminition.dir/searchTree/Node.cpp.o"
   "CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o"
+  "CMakeFiles/terminition.dir/searchTree/Common.cpp.o"
   "terminition.pdb"
   "terminition"
 )

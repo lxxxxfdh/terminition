@@ -38,7 +38,15 @@ namespace termloop {
         return false;
 
     };
+    template<class T>
+    bool isInVector(vector<T>*vb,T ins){
 
+        if(std::find(vb->begin(),vb->end(),ins)!=vb->end())
+            return true;
+        return false;
+
+    };
+    bool symbolCmp(int x,int y,cmpSymbol sym);
     struct condition{
         Value* controlVar;
         cmpSymbol sym;

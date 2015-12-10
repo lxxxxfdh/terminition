@@ -95,41 +95,66 @@ CMakeFiles/terminition.dir/searchTree/Node.cpp.o.provides: CMakeFiles/terminitio
 
 CMakeFiles/terminition.dir/searchTree/Node.cpp.o.provides.build: CMakeFiles/terminition.dir/searchTree/Node.cpp.o
 
-CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o: CMakeFiles/terminition.dir/flags.make
-CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o: loopAnalsis/termLoopPass.cpp
+CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o: CMakeFiles/terminition.dir/flags.make
+CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o: loopAnalysis/termLoopPass.cpp
 	$(CMAKE_COMMAND) -E cmake_progress_report /home/xie/ClionProjects/terminition/CMakeFiles $(CMAKE_PROGRESS_3)
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o -c /home/xie/ClionProjects/terminition/loopAnalsis/termLoopPass.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o -c /home/xie/ClionProjects/terminition/loopAnalysis/termLoopPass.cpp
 
-CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/xie/ClionProjects/terminition/loopAnalsis/termLoopPass.cpp > CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.i
+CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/xie/ClionProjects/terminition/loopAnalysis/termLoopPass.cpp > CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.i
 
-CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/xie/ClionProjects/terminition/loopAnalsis/termLoopPass.cpp -o CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.s
+CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/xie/ClionProjects/terminition/loopAnalysis/termLoopPass.cpp -o CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.s
 
-CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o.requires:
-.PHONY : CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o.requires
+CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o.requires:
+.PHONY : CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o.requires
 
-CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o.provides: CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o.requires
-	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o.provides.build
-.PHONY : CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o.provides
+CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o.provides: CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o.requires
+	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o.provides.build
+.PHONY : CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o.provides
 
-CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o.provides.build: CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o
+CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o.provides.build: CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o
+
+CMakeFiles/terminition.dir/searchTree/Common.cpp.o: CMakeFiles/terminition.dir/flags.make
+CMakeFiles/terminition.dir/searchTree/Common.cpp.o: searchTree/Common.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/xie/ClionProjects/terminition/CMakeFiles $(CMAKE_PROGRESS_4)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/terminition.dir/searchTree/Common.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/terminition.dir/searchTree/Common.cpp.o -c /home/xie/ClionProjects/terminition/searchTree/Common.cpp
+
+CMakeFiles/terminition.dir/searchTree/Common.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/terminition.dir/searchTree/Common.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/xie/ClionProjects/terminition/searchTree/Common.cpp > CMakeFiles/terminition.dir/searchTree/Common.cpp.i
+
+CMakeFiles/terminition.dir/searchTree/Common.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/terminition.dir/searchTree/Common.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/xie/ClionProjects/terminition/searchTree/Common.cpp -o CMakeFiles/terminition.dir/searchTree/Common.cpp.s
+
+CMakeFiles/terminition.dir/searchTree/Common.cpp.o.requires:
+.PHONY : CMakeFiles/terminition.dir/searchTree/Common.cpp.o.requires
+
+CMakeFiles/terminition.dir/searchTree/Common.cpp.o.provides: CMakeFiles/terminition.dir/searchTree/Common.cpp.o.requires
+	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/searchTree/Common.cpp.o.provides.build
+.PHONY : CMakeFiles/terminition.dir/searchTree/Common.cpp.o.provides
+
+CMakeFiles/terminition.dir/searchTree/Common.cpp.o.provides.build: CMakeFiles/terminition.dir/searchTree/Common.cpp.o
 
 # Object files for target terminition
 terminition_OBJECTS = \
 "CMakeFiles/terminition.dir/main.cpp.o" \
 "CMakeFiles/terminition.dir/searchTree/Node.cpp.o" \
-"CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o"
+"CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o" \
+"CMakeFiles/terminition.dir/searchTree/Common.cpp.o"
 
 # External object files for target terminition
 terminition_EXTERNAL_OBJECTS =
 
 terminition: CMakeFiles/terminition.dir/main.cpp.o
 terminition: CMakeFiles/terminition.dir/searchTree/Node.cpp.o
-terminition: CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o
+terminition: CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o
+terminition: CMakeFiles/terminition.dir/searchTree/Common.cpp.o
 terminition: CMakeFiles/terminition.dir/build.make
 terminition: /usr/local/lib/libLLVMSupport.a
 terminition: /usr/local/lib/libLLVMCore.a
@@ -176,7 +201,8 @@ CMakeFiles/terminition.dir/build: terminition
 
 CMakeFiles/terminition.dir/requires: CMakeFiles/terminition.dir/main.cpp.o.requires
 CMakeFiles/terminition.dir/requires: CMakeFiles/terminition.dir/searchTree/Node.cpp.o.requires
-CMakeFiles/terminition.dir/requires: CMakeFiles/terminition.dir/loopAnalsis/termLoopPass.cpp.o.requires
+CMakeFiles/terminition.dir/requires: CMakeFiles/terminition.dir/loopAnalysis/termLoopPass.cpp.o.requires
+CMakeFiles/terminition.dir/requires: CMakeFiles/terminition.dir/searchTree/Common.cpp.o.requires
 .PHONY : CMakeFiles/terminition.dir/requires
 
 CMakeFiles/terminition.dir/clean:

@@ -95,26 +95,19 @@ Node* twoPathSplit(Node* pa){
     }*/
 
 }
-int incStep(int x, int step, int c1){
-    return c1+step-(c1-x)%step;
+int incStep(int x, int step, int c1, cmpSymbol cmp){
+    if(cmp==let)
+        return c1+step-(c1-x)%step;
+    else
+        return c1-1+step-(c1-1-x)%step;
 }
-int decStep(int x, int step, int c1){
-    return c1-step+(x-c1)%step;
+int decStep(int x, int step, int c1, cmpSymbol cmp){
+    if(cmp==cmpSymbol:: get)
+        return c1-step+(x-c1)%step;
+    else
+        return c1+1-step+(x-c1-1)%step;
 }
-bool symbolCmp(int x,int y,cmpSymbol sym){
-    switch (sym){
-        case lt:
-            return x<y;
-        case let:
-            return x<=y;
-        case cmpSymbol:: get:
-            return x>=y;
-        case gt:
-            return x>y;
-        default:
-            assert(false);
-    }
-}
+
 Node* incAndConsSplit(Node* pa){
     vector<Path*>::iterator it=Node::paths->begin();
     it++;
@@ -132,9 +125,9 @@ Node* incAndConsSplit(Node* pa){
                 assert(b!= nullptr&&c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
                 int bb=b->getZExtValue(), cc=c->getZExtValue(),cc1=c1->getZExtValue(),convar=cons_var->getZExtValue();
                 if(p1->initialSat==satisfied){//x|=B
-                    if(symbolCmp(incStep(convar,p1->step,cc1),cc,Node::cmp) ){
+                    if(symbolCmp(incStep(convar,p1->step,cc1,p1->cmp),cc,Node::cmp) ){
                         if(symbolCmp(bb,cc,Node::cmp)){
-                            if(symbolCmp(bb,cc1,p2->cmp)|| symbolCmp(incStep(bb,p1->step,cc1),cc,Node::cmp))
+                            if(symbolCmp(bb,cc1,p2->cmp)|| symbolCmp(incStep(bb,p1->step,cc1,p1->cmp),cc,Node::cmp))
                                 return pa->next[1];
                             else
                                 return pa->next[0];
@@ -146,7 +139,7 @@ Node* incAndConsSplit(Node* pa){
 
                 }else{
                     if(symbolCmp(bb,cc,Node::cmp)){
-                        if(symbolCmp(bb,cc1,p2->cmp)||symbolCmp(incStep(bb,p1->step,cc1),cc,Node::cmp))
+                        if(symbolCmp(bb,cc1,p2->cmp)||symbolCmp(incStep(bb,p1->step,cc1,p1->cmp),cc,Node::cmp))
                             return pa->next[1];
 
                         else
@@ -217,9 +210,9 @@ Node* incAndConsSplit(Node* pa){
                 assert(b!= nullptr&&c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
                 int bb=b->getZExtValue(), cc=c->getZExtValue(),cc1=c1->getZExtValue(),convar=cons_var->getZExtValue();
                 if(p1->initialSat==satisfied){//x|=B
-                    if(symbolCmp(decStep(convar,p1->step,cc1),cc,Node::cmp) ){
+                    if(symbolCmp(decStep(convar,p1->step,cc1,p1->cmp),cc,Node::cmp) ){
                         if(symbolCmp(bb,cc,Node::cmp)){
-                            if(symbolCmp(bb,cc1,p2->cmp)||symbolCmp(decStep(bb,p1->step,cc1),cc,Node::cmp))
+                            if(symbolCmp(bb,cc1,p2->cmp)||symbolCmp(decStep(bb,p1->step,cc1,p1->cmp),cc,Node::cmp))
                                 return pa->next[1];
                             else
                                 return pa->next[0];
@@ -231,7 +224,7 @@ Node* incAndConsSplit(Node* pa){
 
                 }else{
                     if(symbolCmp(bb,cc,Node::cmp)){
-                        if(symbolCmp(bb,cc1,p2->cmp)||symbolCmp(decStep(bb,p1->step,cc1),cc,Node::cmp))
+                        if(symbolCmp(bb,cc1,p2->cmp)||symbolCmp(decStep(bb,p1->step,cc1,p1->cmp),cc,Node::cmp))
 
                             return pa->next[1];
 
@@ -252,6 +245,22 @@ Node* incAndConsSplit(Node* pa){
 
 }
 
+
+bool interleaving(int x, int inc, int dec, cmpSymbol guard, int c, cmpSymbol ifguard, int c1){
+    vector<int> traversed;
+    while(true){
+        if(!symbolCmp(x,c,guard))
+            return true;
+        if(isInVector(&traversed,x))
+            return false;
+        traversed.push_back(x);
+        if(symbolCmp(x,c1,ifguard))
+            x=incStep(x,inc,c1,ifguard);
+        else
+            x=decStep(x,dec,c1,(cmpSymbol)(3-ifguard));
+    }
+
+}
 Node* incAndDecSplit(Node* pa){
     vector<Path*>::iterator it=Node::paths->begin();
     it++;
@@ -261,48 +270,32 @@ Node* incAndDecSplit(Node* pa){
     ConstantInt* c=dyn_cast<ConstantInt>(Node::c);
     ConstantInt* c1=dyn_cast<ConstantInt>(p1->c1);
     ConstantInt* cons_var=dyn_cast<ConstantInt>(Node::convar_value);
-    if(Node::controlAbove){
-        if(p1->pathAbove){ //x<c x<c1 p1-> p2<-
-            assert(c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
-            int cc=c->getZExtValue();
-            int cc1=c->getZExtValue();
-            if(symbolCmp(cc1,cc,Node::cmp)&&(symbolCmp(cc-cc1,p1->step,p2->cmp)))   //????right
-                return pa->next[1];
-            else
-                return pa->next[0];
-
-        }else{
-            if(p1->initialSat!=satisfied)
-                return pa->next[1];
-            else
-                return pa->next[0];
-
-
-        }
-
-    }else{
-        if(p1->pathAbove){
-            assert(c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
-            int cc=c->getZExtValue();
-            int cc1=c->getZExtValue();
-            if(symbolCmp(cc1,cc,Node::cmp)&&(symbolCmp(cc-cc1,p2->step,p2->cmp)))    //?????????
-                return pa->next[1];
-            else
-                return pa->next[0];
-
-        }else{   // x>c x>c1 p1-> p2<-
-            if(p1->initialSat==satisfied)
-                return pa->next[1];
-            else
-                return pa->next[0];
-
-
-
-
-        }
+    if(p1->pathAbove){//x<c x<c1 p1-> p2<-    x>c x<c1 p1-> p2 <-
+        assert(c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
+        int cc=c->getZExtValue();
+        int cc1=c->getZExtValue();
+        int initial=cons_var->getZExtValue();
+        bool tag=interleaving(initial,p1->step,p2->step,Node::cmp,cc,p1->cmp,cc1);
+        if(tag)
+            return pa->next[0];
+        else
+            return pa->next[1];
+    }
+    else if(Node::controlAbove){ // x<c x>c1 p1-> p2<-
+        if(p1->initialSat!=satisfied)
+            return pa->next[1];
+        else
+            return pa->next[0];
+    }else{ // x>c x>c1 p1-> p2<-
+        if(p1->initialSat==satisfied)
+            return pa->next[1];
+        else
+            return pa->next[0];
     }
 
+
 }
+
 
 Node* consAndConsSplit(Node* pa){
     vector<Path*>::iterator it=Node::paths->begin();

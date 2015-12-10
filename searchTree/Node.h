@@ -85,25 +85,11 @@ namespace termloop {
             return true;
         }
 
-        bool cmpInt(ConstantInt* init1, ConstantInt* c, cmpSymbol cm){
-            switch(cm){
-                case other:
-                    assert(false);
-                case gt:
-                    return init1>c;
-                case get:
-                    return init1>=c;
 
-                case lt:
-                    return init1<c;
-                case let:
-                   return init1<=c;
 
-            }
-        }
 
         //find the x~c1
-        void branConditionHandle(vector<BasicBlock *> *outBlocks, Value* cv) {
+        void branConditionHandle(vector<BasicBlock *> *outBlocks, Value* convar) {
 
 
             ICmpInst* icmp=nullptr;
@@ -145,11 +131,13 @@ namespace termloop {
 
                         }
                         //errs()<<*cv<<"\r\n"<<*con.c;
-                        ConstantInt *initial=dyn_cast<ConstantInt>(cv);
+                        ConstantInt *initial=dyn_cast<ConstantInt>(convar);
+
+                        //errs()<<*initial<<"!!!!!!!!!!!!!!!!";
 
                         ConstantInt *cc1=dyn_cast<ConstantInt>(con.c);
                         if(initial!=nullptr&& cc1!=nullptr)
-                            initialSat=cmpInt(initial,cc1,cmp)? satisfied:unsatisfied;
+                            initialSat=symbolCmp(initial->getZExtValue(),cc1->getZExtValue(),cmp)? satisfied:unsatisfied;
                     } else
                         assert(false);
                 } else
@@ -158,8 +146,8 @@ namespace termloop {
 
         }
 
-        void computeIncrease(vector<BasicBlock *> *outBlocks, Value* cv) {
-            branConditionHandle(outBlocks,cv);
+        void computeIncrease(vector<BasicBlock *> *outBlocks, Value* cv, Value* convar) {
+            branConditionHandle(outBlocks,convar);
 
             if (PHINode *phi = dyn_cast<PHINode>(con_var)) {
                 Value *v = getValueForPhi(phi);
@@ -259,7 +247,7 @@ namespace termloop {
     public:
         nodeType type;
         static Value *con_var;
-        static Value *convar_value;
+        static Value *convar_value;  //control variable value
         static Value *c;
         static Value *c1;
         static Loop *l;
@@ -281,7 +269,7 @@ namespace termloop {
             for (vector<Path *>::iterator it = paths->begin(); it != paths->end(); it++) {
                 Path *p = *it;
                 if(p->increase==unknown)
-                    p->computeIncrease(outBlocks,con_var);
+                    p->computeIncrease(outBlocks,con_var,convar_value);
                 //p->dump();
 
 

@@ -59,7 +59,7 @@ CMAKE_BINARY_DIR = /home/xie/ClionProjects/terminition
 CMakeFiles/terminition.dir/all:
 	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/depend
 	$(MAKE) -f CMakeFiles/terminition.dir/build.make CMakeFiles/terminition.dir/build
-	$(CMAKE_COMMAND) -E cmake_progress_report /home/xie/ClionProjects/terminition/CMakeFiles  1 2 3
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/xie/ClionProjects/terminition/CMakeFiles  1 2 3 4
 	@echo "Built target terminition"
 .PHONY : CMakeFiles/terminition.dir/all
 
@@ -69,7 +69,7 @@ all: CMakeFiles/terminition.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/terminition.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/xie/ClionProjects/terminition/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/xie/ClionProjects/terminition/CMakeFiles 4
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/terminition.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/xie/ClionProjects/terminition/CMakeFiles 0
 .PHONY : CMakeFiles/terminition.dir/rule
