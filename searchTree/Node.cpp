@@ -270,6 +270,7 @@ Node* incAndDecSplit(Node* pa){
     ConstantInt* c=dyn_cast<ConstantInt>(Node::c);
     ConstantInt* c1=dyn_cast<ConstantInt>(p1->c1);
     ConstantInt* cons_var=dyn_cast<ConstantInt>(Node::convar_value);
+
     if(p1->pathAbove){//x<c x<c1 p1-> p2<-    x>c x<c1 p1-> p2 <-
         assert(c!= nullptr&&c1!=nullptr&&cons_var!= nullptr);
         int cc=c->getZExtValue();
@@ -286,14 +287,12 @@ Node* incAndDecSplit(Node* pa){
             return pa->next[1];
         else
             return pa->next[0];
-    }else{ // x>c x>c1 p1-> p2<-
-        if(p1->initialSat==satisfied)
+    }else { // x>c x>c1 p1-> p2<-
+        if (p1->initialSat == satisfied)
             return pa->next[1];
         else
             return pa->next[0];
     }
-
-
 }
 
 
@@ -310,66 +309,12 @@ Node* consAndConsSplit(Node* pa){
     ConstantInt* b2=dyn_cast<ConstantInt>(p2->b);
     assert(c!= nullptr&&c1!=nullptr&&cons_var!= nullptr&&b1!=nullptr&&b2!= nullptr);
     int cc=c->getZExtValue(),cc1=c1->getZExtValue(),bb1=b1->getZExtValue(),bb2=b2->getZExtValue();
-    if(Node::controlAbove){
-        if(p1->pathAbove){
-            if(p1->initialSat==satisfied){
-                if(bb1<=cc&&(bb1<=cc1||bb2<=cc))
+    if((p1->initialSat==satisfied&&symbolCmp(bb1,cc,Node::cmp)&&symbolCmp(bb1,cc1,p1->cmp))||
+            (p1->initialSat==unsatisfied&&symbolCmp(bb2,cc,Node::cmp)&&symbolCmp(bb2,cc1,p2->cmp))||
+            (symbolCmp(bb1,cc,Node::cmp)&&symbolCmp(bb2,cc,Node::cmp))
+            )
                     return pa->next[1];
-                else
-                    return pa->next[0];
-            }else{
-                if(bb2<=cc&&(bb2>cc1||bb1<=cc))
-                    return pa->next[1];
-                return pa->next[0];
-
-            }
-
-        }else{
-            if(p1->initialSat==satisfied){
-                if(bb1<=cc&&(bb1>=cc1||bb2<=cc))
-                    return pa->next[1];
-                else
-                    return pa->next[0];
-            }else{
-                if(bb2<=cc&&(bb2<cc1||bb1<=cc))
-                    return pa->next[1];
-                return pa->next[0];
-
-            }
-
-
-        }
-
-    }else{
-        if(p1->pathAbove){
-            if(p1->initialSat==satisfied){
-                if(bb1>=cc&&(bb1<=cc1||bb2>=cc))
-                    return pa->next[1];
-                else
-                    return pa->next[0];
-            }else{
-                if(bb2>=cc&&(bb2>cc1||bb1>=cc))
-                    return pa->next[1];
-                return pa->next[0];
-
-            }
-        }else{
-            if(p1->initialSat==satisfied){
-                if(bb1>=cc&&(bb1>=cc1||bb2>=cc))
-                    return pa->next[1];
-                else
-                    return pa->next[0];
-            }else{
-                if(bb2>=cc&&(bb2<cc1||bb1>=cc))
-                    return pa->next[1];
-                return pa->next[0];
-
-            }
-
-
-        }
-    }
-
+    return pa->next[0];
 }
 Node* termloop::constructTree(){
 
