@@ -59,6 +59,10 @@ int adjustPostion(){
     Path* p2=*it;
     if((p1->increase==increasing&&p2->increase==increasing)||(p1->increase==decreasing&&p2->increase==decreasing))
         return 0;
+
+    if(!p1->validForm||!p2->validForm)
+        return 4;
+
     if((p1->increase==increasing||p1->increase==decreasing)&&p2->increase==constant)
         return 1;
     if(p1->increase==constant&&(p2->increase==increasing||p2->increase==decreasing)) {
@@ -109,6 +113,8 @@ int decStep(int x, int step, int c1, cmpSymbol cmp){
 }
 
 Node* incAndConsSplit(Node* pa){
+
+
     vector<Path*>::iterator it=Node::paths->begin();
     it++;
     Path* p1=*Node::paths->begin();
@@ -321,14 +327,14 @@ Node* termloop::constructTree(){
     Node*root= new Node(nodeType::pathnum);
     Node*singlePath= new Node(nodeType::controlabove);
     Node*twoPath=new Node(nodeType::monotonic);
-    Node*unknownPath=new Node(nodeType::unsupport);
+    Node*unsupport=new Node(nodeType::unsupport);
     Node* terminate=new Node(nodeType::result);
     Node* unTerminate=new Node(nodeType::result);
     terminate->chooseNext=termOutput;
     unTerminate->chooseNext=nonTermOutput;
     root->next.push_back(singlePath);
     root->next.push_back(twoPath);
-    root->next.push_back(unknownPath);
+    root->next.push_back(unsupport);
     root->chooseNext=pathNumSplit;
 
 
@@ -346,6 +352,7 @@ Node* termloop::constructTree(){
     twoPath->next.push_back(incAndCons);
     twoPath->next.push_back(incAndDec);
     twoPath->next.push_back(consAndCons);
+    twoPath->next.push_back(unsupport);
     twoPath->chooseNext=twoPathSplit;
     incAndCons->chooseNext=incAndConsSplit;
     incAndCons->next.push_back(terminate);

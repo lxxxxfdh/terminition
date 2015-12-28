@@ -30,18 +30,21 @@ namespace termloop {
         Value* c1;
         cmpSymbol cmp;
         int step;
+        bool validForm;
         vector<BasicBlock *> edges;
 
         Path(vector<BasicBlock *> *vb, Value *var) : edges(*vb), con_var(var) {
             step = UNOWN;
             increase = unknown;
             initialSat = nonfixed;
+            validForm=true;
         }
 
         Path(Value *var, cmpSymbol sym, vector<BasicBlock *> *vb) : con_var(var), cmp(sym), edges(*vb) {
             step = UNOWN;
             increase = unknown;
             initialSat = nonfixed;
+            validForm=true;
         }
 
         BasicBlock *getPrev(BasicBlock *bb) {
@@ -75,15 +78,7 @@ namespace termloop {
             return false;
         }
 
-        bool isConstantValue(Value *v) {
 
-            if (Instruction *inst = dyn_cast<Instruction>(v)) {
-                BasicBlock *bb = inst->getParent();
-                if (isInPath(bb))
-                    return false;
-            }
-            return true;
-        }
 
 
 
@@ -109,35 +104,45 @@ namespace termloop {
                     assert(it!=edges.end());
                     tag= dest==*it? 0:1;
                     it--;
+                    //errs()<<*br;
                     if(icmp=dyn_cast<ICmpInst>(br->getOperand(0))){
                         condition con=checkCond(icmp,tag);
 
-                        assert(con_var==con.controlVar);
+                        //assert(con_var==con.controlVar);
+                        if(con_var!=con.controlVar||con.isEmpty()){
 
+                            //errs()<<*con_var<<"  sss   "<<con.controlVar;
+                            //con_var=nullptr;
+                           // c1= nullptr;
+                            validForm=false;
 
-                        c1=con.c;
-                        cmp=con.sym;
-                        switch(con.sym){
-                            case other:
-                                assert(false);
-                            case gt:
-                            case get:
-                                pathAbove=false;
-                                break;
-                            case lt:
-                            case let:
-                                pathAbove=true;
-                                break;
+                        }else{
+                            c1=con.c;
+                            cmp=con.sym;
+                            switch(con.sym){
+                                case other:
+                                    assert(false);
+                                case gt:
+                                case get:
+                                    pathAbove=false;
+                                    break;
+                                case lt:
+                                case let:
+                                    pathAbove=true;
+                                    break;
 
+                            }
+                            //errs()<<*cv<<"\r\n"<<*con.c;
+                            ConstantInt *initial=dyn_cast<ConstantInt>(convar);
+
+                            //errs()<<*initial<<"!!!!!!!!!!!!!!!!";
+
+                            ConstantInt *cc1=dyn_cast<ConstantInt>(con.c);
+                            if(initial!=nullptr&& cc1!=nullptr)
+                                initialSat=symbolCmp(initial->getZExtValue(),cc1->getZExtValue(),cmp)? satisfied:unsatisfied;
                         }
-                        //errs()<<*cv<<"\r\n"<<*con.c;
-                        ConstantInt *initial=dyn_cast<ConstantInt>(convar);
 
-                        //errs()<<*initial<<"!!!!!!!!!!!!!!!!";
 
-                        ConstantInt *cc1=dyn_cast<ConstantInt>(con.c);
-                        if(initial!=nullptr&& cc1!=nullptr)
-                            initialSat=symbolCmp(initial->getZExtValue(),cc1->getZExtValue(),cmp)? satisfied:unsatisfied;
                     } else
                         assert(false);
                 } else
@@ -187,13 +192,20 @@ namespace termloop {
                             temp = cos2->getZExtValue();
                             newVar = v1;
                             constT = true;
-                        } else if (isConstantValue(v1)) {
-                            tempVal = v1;
-                            newVar = v2;
-                        } else if (isConstantValue(v2)) {
-                            tempVal = v2;
-                            newVar = v1;
+                        } else{
+                            int re=isConstantValue(v1);
+                            if (re!=INT32_MIN) {
+                                temp = re;
+                                newVar = v2;
+                                constT = true;
+                            } else if ((re=isConstantValue(v2))!=INT32_MIN) {
+                                temp = re;
+                                newVar = v1;
+                                constT = true;
+                            }
                         }
+
+
                         v = newVar;
                         switch (bop->getOpcode()) {
                             case Instruction::Add: {
@@ -201,6 +213,7 @@ namespace termloop {
                                     change += temp;
                                 }
                                 else {
+                                    errs()<<*con_var;
                                     assert(false);
                                 }
                                 break;

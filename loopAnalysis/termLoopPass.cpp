@@ -4,6 +4,7 @@
 #include <iostream>
 #include "termLoopPass.h"
 #include "searchTree/Node.h"
+#include "llvm/IR/LLVMContext.h"
 #include <stack>
 using namespace llvm;
 using namespace termloop;
@@ -36,7 +37,10 @@ namespace termloop {
 
             }
         }
-        assert(Node::outBlocks->size()==1&&"Unsupport loop && Multiple exit condition");
+        //assert(Node::outBlocks->size()==1&&"Unsupport loop && Multiple exit condition");
+        if(Node::outBlocks->size()>1){
+            errs()<<"Multiple exit condition and only choose the first one, ";
+        }
 
         BasicBlock* bb=Node::outBlocks->front();
         //errs()<<*bb;
@@ -46,6 +50,7 @@ namespace termloop {
             BasicBlock* dest = br->getSuccessor(0);
             int tag= l->contains(dest)? 0:1;
             if(ICmpInst* icmp=dyn_cast<ICmpInst>(br->getOperand(0))){
+                //errs()<<*icmp;
                 condition con=checkCond(icmp,tag);
                // con.output();
                 switch(con.sym){
@@ -68,6 +73,13 @@ namespace termloop {
                 int i=phi->getBasicBlockIndex(entry);
                 assert(i!=-1&&"The initial value is not fixed");
                 Node::convar_value=phi->getIncomingValue(i);
+               // errs()<<*phi;
+                if(!isa<Constant>(Node::convar_value)){
+                    int num=isConstantValue(Node::convar_value);
+                    if(num!=INT32_MIN){
+                        Node::convar_value=ConstantInt::get(IntegerType::getInt32Ty(getGlobalContext()),num);
+                    }
+                }
                 assert(isa<Constant>(Node::convar_value)&&"Initial value of control variable is not constant");
                 return true;
 
@@ -164,8 +176,11 @@ namespace termloop {
         bool runOnFunction(Function &f) override {
             LoopInfo *LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();//.getLoopInfo();
             Node* root=constructTree();
+            int i=1;
+
             for(LoopInfo::iterator I = LI->begin(), E = LI->end(); I != E; ++I)
             {
+                errs()<<"Loop "<<i++<<": ";
                 Node::paths->clear();
                 Node::c= nullptr;
                 Node::con_var=nullptr;

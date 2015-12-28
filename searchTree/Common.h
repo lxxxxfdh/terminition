@@ -52,18 +52,27 @@ namespace termloop {
         cmpSymbol sym;
         Value* c;
         condition():controlVar(nullptr),sym(other),c(nullptr){}
+        bool isEmpty(){
+            if(controlVar==nullptr||c== nullptr)
+                return true;
+            return false;
+        }
         void output(){
-            errs()<<"Control Variable: "<<controlVar->getName()<<"\r\n";
-            errs()<<"Symbole: "<<(cmpSymbol)sym<<"\r\n";
-            errs()<<"C: "<< *c<<"\r\n";
-
+            if(controlVar== nullptr)
+                errs()<<"Control Var Null!\r\n";
+            else {
+                errs() << "Control Variable: " << controlVar->getName() << "\r\n";
+                errs() << "Symbole: " << (cmpSymbol) sym << "\r\n";
+                errs() << "C: " << *c << "\r\n";
+            }
         }
     };
 
     //whether the var is changing in the loop iteration
     //coarse implementation
 
-    bool isIterativeVar(Value* var);
+    Value* isIterativeVar(Value* var);
+    int isConstantValue(Value *v);
 
     //find the condition with the form x~c ~ is {<,<=,>,>=}
     //tag: 0 normal, 1 reverse

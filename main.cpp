@@ -69,10 +69,30 @@ int main(int argc,char *argv[]) {
 
 
     if(argc!=2){
-        errs()<<"Needs one directory as the arguments! \r\n";
+        errs()<<"Need one directory as the arguments! \r\n";
         return 0;
     }
     string argu=argv[1];
+
+
+
+    legacy::PassManager pm;
+    pm.add(createLoopPass());
+
+
+    clock_t b1 = clock();
+    string path=argv[1]; //"/home/xie/SNU-real-time/fft1/fft1reg.ll";
+    std::unique_ptr<Module> Mod = parseIRFile(path, Err, Context);
+    if (Mod) {
+        pm.run(*Mod);
+    }else{
+        assert(false);
+    }
+    clock_t  b2=clock();
+    printf("Time comsumption is  %05.3f  milliseconds\r\n\r\n",(double)(b2-b1)/1000);
+
+
+    return 0;
     if(access(argu.c_str(),F_OK)==-1) { //dir not exists
         errs()<<argu<<" not found\r\n";
         return 0;
@@ -92,6 +112,14 @@ int main(int argc,char *argv[]) {
         if (mkdir(buffer,0777))
             assert(false&&"Cannot create temp");
     }
+
+
+
+
+
+
+
+    //errs()<<buffer;
     string r=rootDir, r1=buffer;
 
     clock_t start = clock();
@@ -101,14 +129,23 @@ int main(int argc,char *argv[]) {
     system(cmd.c_str());
 
 
-    map<string,string>  files;
-    List(buffer,&files);
-    legacy::PassManager pm;
-    pm.add(createLoopPass());
 
+
+
+
+
+
+
+
+
+
+
+    //for file
     double end = (double)(clock() - start)/1000;
 
     //errs()<<" Generate IR time: "<<(double)end <<"seconds!\r\n";
+    map<string,string>  files;
+    List(buffer,&files);
     sleep(1);
     clock_t s1=clock();
     int i=1;
