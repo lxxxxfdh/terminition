@@ -51,7 +51,7 @@ namespace termloop {
             int tag= l->contains(dest)? 0:1;
             if(ICmpInst* icmp=dyn_cast<ICmpInst>(br->getOperand(0))){
                 //errs()<<*icmp;
-                condition con=checkCond(icmp,tag);
+                condition con=checkCond(icmp,tag,l);
                // con.output();
                 switch(con.sym){
                     case other:
@@ -80,7 +80,7 @@ namespace termloop {
                         Node::convar_value=ConstantInt::get(IntegerType::getInt32Ty(getGlobalContext()),num);
                     }
                 }
-                assert(isa<Constant>(Node::convar_value)&&"Initial value of control variable is not constant");
+                //assert(isa<Constant>(Node::convar_value)&&"Initial value of control variable is not constant");
                 return true;
 
             }else
@@ -128,7 +128,7 @@ namespace termloop {
             }
             if(!hasChildren){// the leafnode
 
-                Path* pa=new Path(path,Node::con_var);
+                Path* pa=new Path(path,Node::con_var,l);
 
                 Node::paths->push_back(pa);
             }
@@ -160,7 +160,7 @@ namespace termloop {
     class LoopTermAnalysis final : public FunctionPass {
     public:
         static char ID;
-
+        static DataLayout* DT;
         LoopTermAnalysis() : FunctionPass(ID) {
             initializeLoopTermAnalysisPass(*PassRegistry::getPassRegistry());
 
@@ -199,7 +199,8 @@ namespace termloop {
 
 }
 char termloop::LoopTermAnalysis::ID = 0;
-
+DataLayout* LoopTermAnalysis::DT=nullptr;
+DataLayout* Path::DT=nullptr;
 INITIALIZE_PASS_BEGIN(LoopTermAnalysis, "looppass", "looptest", false, false)
     //  INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
     // INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
@@ -209,4 +210,9 @@ INITIALIZE_PASS_END(LoopTermAnalysis, "looppass", "looptest", false, false)
 llvm::FunctionPass *termloop::createLoopPass()
 {
     return new LoopTermAnalysis();
+}
+
+void termloop::setDataLa(DataLayout* dt){
+    LoopTermAnalysis::DT=dt;
+    Path::DT=dt;
 }

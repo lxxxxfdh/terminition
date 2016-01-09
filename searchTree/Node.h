@@ -14,6 +14,7 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Constants.h"
 #include <vector>
+#include <llvm/IR/LLVMContext.h>
 
 using namespace llvm;
 using namespace termloop;
@@ -29,18 +30,21 @@ namespace termloop {
         Value *con_var;
         Value* c1;
         cmpSymbol cmp;
+        Loop* l;
+        static DataLayout* DT;
         int step;
         bool validForm;
         vector<BasicBlock *> edges;
 
-        Path(vector<BasicBlock *> *vb, Value *var) : edges(*vb), con_var(var) {
+        Path(vector<BasicBlock *> *vb, Value *var,Loop* loop) : edges(*vb), con_var(var), l(loop) {
             step = UNOWN;
             increase = unknown;
             initialSat = nonfixed;
             validForm=true;
+
         }
 
-        Path(Value *var, cmpSymbol sym, vector<BasicBlock *> *vb) : con_var(var), cmp(sym), edges(*vb) {
+        Path(Value *var, cmpSymbol sym, vector<BasicBlock *> *vb,Loop* loop) : con_var(var), cmp(sym), edges(*vb),l(loop) {
             step = UNOWN;
             increase = unknown;
             initialSat = nonfixed;
@@ -95,10 +99,15 @@ namespace termloop {
                 if(isInVector(outBlocks,bb))
                     continue;
                 TerminatorInst* term=bb->getTerminator();
+                //errs()<<*bb;
                 if(BranchInst* br=dyn_cast<BranchInst>(term)){
                     if(br->isUnconditional()) continue;
-                    if(icmp!= nullptr)
-                        assert(false&&"Multiple branches");
+
+                    if(icmp!= nullptr){ //"Multiple branches"
+                        return;
+                       // assert(false&&"Multiple branches");
+                    }
+
                     BasicBlock* dest = br->getSuccessor(0);
                     it++;
                     assert(it!=edges.end());
@@ -106,7 +115,7 @@ namespace termloop {
                     it--;
                     //errs()<<*br;
                     if(icmp=dyn_cast<ICmpInst>(br->getOperand(0))){
-                        condition con=checkCond(icmp,tag);
+                        condition con=checkCond(icmp,tag,l);
 
                         //assert(con_var==con.controlVar);
                         if(con_var!=con.controlVar||con.isEmpty()){
@@ -121,7 +130,8 @@ namespace termloop {
                             cmp=con.sym;
                             switch(con.sym){
                                 case other:
-                                    assert(false);
+                                    //assert(false);
+                                    break;
                                 case gt:
                                 case get:
                                     pathAbove=false;
@@ -138,7 +148,7 @@ namespace termloop {
                             //errs()<<*initial<<"!!!!!!!!!!!!!!!!";
 
                             ConstantInt *cc1=dyn_cast<ConstantInt>(con.c);
-                            if(initial!=nullptr&& cc1!=nullptr)
+                            if(initial!=nullptr&& cc1!=nullptr&&cmp!=other)
                                 initialSat=symbolCmp(initial->getZExtValue(),cc1->getZExtValue(),cmp)? satisfied:unsatisfied;
                         }
 
@@ -150,23 +160,74 @@ namespace termloop {
             }
 
         }
+        static int getOffsetForGep(gep_type_iterator I,  gep_type_iterator E)
+        {
+            assert(DT!= nullptr);
+            int num=0;
+            for(; I != E; ++I)
+            {
+                if(StructType *STy = dyn_cast<StructType>(*I))
+                {
+                    assert(false);   //no change and support now
+                    const StructLayout *SLO = DT->getStructLayout(STy);
+                    const ConstantInt *CPU = cast<ConstantInt>(I.getOperand());
+                    unsigned Index = unsigned(CPU->getZExtValue());
+                    num += SLO->getElementOffset(Index);
+                }
+                else
+                {
+                    SequentialType *ST = cast<SequentialType>(*I);
+                    // Get the index number for the array... which must be long type...
+                    //GenericValue IdxGV = getOperandValue(I.getOperand(), SF);
+                    Value* IdxGV = I.getOperand();
+                    // int64_t Idx;
+                    // Total += TD.getTypeAllocSize(ST->getElementType())*Idx;
+                    ConstantInt *AllocSize = ConstantInt::get(IntegerType::getInt32Ty(getGlobalContext()), DT->getTypeAllocSize(ST->getElementType()));
+                    //Value* temp = SemanticValue::tryCal(Instruction::Mul, AllocSize, IdxGV, unkownlist);
+                    //Total = SemanticValue:: tryCal(Instruction::Add, Total, temp, unkownlist);
+                    int nnn=isConstantValue(IdxGV);
+                    if(nnn==INT32_MIN)
+                        return UNOWN;
+                    num+= (AllocSize->getZExtValue())*nnn;
+                }
+                return num;
+            }
+        }
 
         void computeIncrease(vector<BasicBlock *> *outBlocks, Value* cv, Value* convar) {
-            branConditionHandle(outBlocks,convar);
 
+            branConditionHandle(outBlocks,convar);
+            assert(cv==con_var&&"Check the consistance");
+            //errs()<<*con_var;
             if (PHINode *phi = dyn_cast<PHINode>(con_var)) {
                 Value *v = getValueForPhi(phi);
                 assert(v != nullptr);
                 int change = 0;
                 bool isMul = false;
+
                 while (true) {
 
-                   // errs() << *v << "\r\n";
-                   // errs()<<*con_var<<"\r\n";
+                  // errs() << *v << "\r\n";
+                  //  errs()<<*con_var<<"\r\n";
                     if (v == con_var) {
 
                         if (isMul) {
                             //not consider the mul change symbol
+                            increase=unknown;
+                            if(ConstantInt* cons=dyn_cast<ConstantInt>(convar)){
+                                if(cons==0||change==0)
+                                    increase=constant;
+                                else{
+                                    if(cons>0&&change>0)
+                                        increase=increasing;
+                                    if(cons<0&&change>0)
+                                        increase=decreasing;
+
+                                }
+
+                            }
+                            step=UNOWN;
+                            break;
                         } else {
 
                             increase = change > 0 ? increasing : decreasing;
@@ -175,7 +236,19 @@ namespace termloop {
 
                         }
                     }
-                    if (BinaryOperator *bop = dyn_cast<BinaryOperator>(v)) {
+                    if (GetElementPtrInst* getEle=dyn_cast<GetElementPtrInst>(v)){
+                        int changeVal=getOffsetForGep( gep_type_begin(getEle), gep_type_end(getEle));
+                        if(changeVal!=UNOWN){
+                            v=getEle->getPointerOperand();
+                            change=changeVal;
+                        }else{
+                            step=UNOWN;
+                            increase=unknown;
+                            break;
+                        }
+
+
+                    }else  if (BinaryOperator *bop = dyn_cast<BinaryOperator>(v)) {
 
                         Value *v1 = bop->getOperand(0);
                         Value *v2 = bop->getOperand(1);
@@ -227,7 +300,18 @@ namespace termloop {
                                 }
                                 break;
                             }
+                            case Instruction::Mul:{
+                                if (constT&&change ==0){
+                                    isMul=true;
+                                    change=temp;
+                                } else {
+                                    errs()<<*con_var;
+                                    assert(false);
+                                }
+                                break;
+                            }
                             default:
+
                                 assert(false);
 
                         }
@@ -238,6 +322,10 @@ namespace termloop {
                         b=cs;
                         increase=constant;
                         break;
+                    }else if(TruncInst* trunc=dyn_cast<TruncInst>(v)){
+                        v=trunc->getOperand(0);
+                    }else if(SExtInst* sest=dyn_cast<SExtInst>(v)){
+                        v=sest->getOperand(0);
                     }
                 }
 

@@ -41,6 +41,10 @@ Node* nonTermOutput(Node* pa){
     errs()<<"Nontermination \r\n";
     return nullptr;
 }
+Node* unknownTermOut(Node* pa){
+    errs()<<"Unknown \r\n";
+    return nullptr;
+}
 Node* singleAboveBelowSplit(Node* pa){
   //  assert(Node::paths->size()==1);
     Path* pt=*Node::paths->begin();
@@ -48,8 +52,9 @@ Node* singleAboveBelowSplit(Node* pa){
         return pa->next[0];
     else if(pt->increase==decreasing)
         return pa->next[1];
-    else
-        assert(false);
+    else if(pt->increase==unknown)
+        return pa->next[2];
+    assert(false);
 }
 //0 : both inc or dec  1: increasing and constant 2: increasing decreasing 3: constant constant
 int adjustPostion(){
@@ -84,6 +89,30 @@ int adjustPostion(){
 Node* notImplement(Node* pa){
     errs()<<"Not implemented\r\n";
     return nullptr;
+}
+Node* multiPaths(Node* pa){
+
+}
+Node* multiPathsSplit(Node* pa){
+    vector<Path*>::iterator it=Node::paths->begin();
+    monotonicity inc=(*it)->increase;
+    it++;
+    for(;it!=Node::paths->end();it++){
+        if((*it)->increase!=inc){
+            return pa->next[1];
+        }
+    }
+    return pa->next[0];
+
+    /*switch (tag){
+        case 0:
+            return pa->next[0];
+        case 1:
+            return pa->next[1];
+        default:
+            assert(false);
+    }*/
+
 }
 Node* twoPathSplit(Node* pa){
     int tag=adjustPostion();
@@ -327,14 +356,18 @@ Node* termloop::constructTree(){
     Node*root= new Node(nodeType::pathnum);
     Node*singlePath= new Node(nodeType::controlabove);
     Node*twoPath=new Node(nodeType::monotonic);
+    Node* multiPaths=new Node(nodeType::monotonic);
     Node*unsupport=new Node(nodeType::unsupport);
+
     Node* terminate=new Node(nodeType::result);
     Node* unTerminate=new Node(nodeType::result);
+    Node* unknown=new Node(nodeType::result);
     terminate->chooseNext=termOutput;
     unTerminate->chooseNext=nonTermOutput;
+    unknown->chooseNext=unknownTermOut;
     root->next.push_back(singlePath);
     root->next.push_back(twoPath);
-    root->next.push_back(unsupport);
+    root->next.push_back(multiPaths);
     root->chooseNext=pathNumSplit;
 
 
@@ -344,6 +377,8 @@ Node* termloop::constructTree(){
     singlePath->next.push_back(singleAbove);
     singlePath->next.push_back(singleBelow);
     singlePath->chooseNext=singlePathSplit;
+
+
 
     Node* incAndCons=new Node(nodeType::empty);
     Node* incAndDec=new Node(nodeType::empty);
@@ -358,6 +393,9 @@ Node* termloop::constructTree(){
     incAndCons->next.push_back(terminate);
     incAndCons->next.push_back(unTerminate);
 
+    multiPaths->next.push_back(singlePath);
+    multiPaths->next.push_back(unsupport);
+    multiPaths->chooseNext=multiPathsSplit;
 
     incAndDec->chooseNext=incAndDecSplit;
     incAndDec->next.push_back(terminate);
@@ -373,6 +411,7 @@ Node* termloop::constructTree(){
 
     singleAbove->next.push_back(terminate);
     singleAbove->next.push_back(unTerminate);
+    singleAbove->next.push_back(unknown);
     singleBelow->next.push_back(unTerminate);
     singleBelow->next.push_back(terminate);
     singleAbove->chooseNext=singleAboveBelowSplit;

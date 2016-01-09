@@ -84,7 +84,10 @@ int main(int argc,char *argv[]) {
     string path=argv[1]; //"/home/xie/SNU-real-time/fft1/fft1reg.ll";
     std::unique_ptr<Module> Mod = parseIRFile(path, Err, Context);
     if (Mod) {
+        DataLayout T(Mod.get());
+        setDataLa(&T);
         pm.run(*Mod);
+
     }else{
         assert(false);
     }

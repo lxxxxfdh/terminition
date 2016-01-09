@@ -13,9 +13,12 @@
 #include "llvm/Pass.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/PassManager.h"
+#include "llvm/IR/DataLayout.h"
+using namespace llvm;
 using namespace std;
 namespace termloop{
     llvm::FunctionPass *createLoopPass();
+    void setDataLa(DataLayout* dt);
 }
 
 
