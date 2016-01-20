@@ -15,12 +15,15 @@ using namespace std;
 using namespace llvm;
 namespace termloop {
     const int UNOWN=INT32_MIN;
+    enum monotoneType{
+        arithmetic, geometric, Irregular, unknownmono
+    };
     enum satiType{
         satisfied, unsatisfied, nonfixed
     };
 
     enum nodeType {
-        pathnum, monotonic, controlabove, result, empty, unsupport
+        pathnum, monotonic, controlabove, result, empty, gapfree,gaphandle, unsupport
     };
     enum monotonicity {
         increasing, decreasing, constant, unknown
@@ -49,11 +52,50 @@ namespace termloop {
 
     };
     bool symbolCmp(int x,int y,cmpSymbol sym);
+    struct varIncrease{
+        Value* var;
+        monotonicity increase;
+        int varValue;
+        monotoneType monoType;
+        int step;
+        int v;
+        void init(Value* val){
+            var= val;
+            increase=unknown;
+            monoType=unknownmono;
+            step=UNOWN;
+            varValue=UNOWN;
+            v=UNOWN;
+        }
+        varIncrease(): var(nullptr), increase(unknown), monoType(unknownmono),step(UNOWN),varValue(UNOWN),v(UNOWN){}
+    };
+    struct twoVals{
+        Value* iterVal1;
+        Value* iterVal2;
+        Value* c;
+        Instruction::BinaryOps posOrNeg;
+        //-1: no iterval, 0: x-y  ,1 :x, 2: x+c,3: c
+        int getType(){
+            if(iterVal1!=nullptr){
+                if(iterVal2!=nullptr)
+                    return 0;
+                else if(c==nullptr)
+                    return 1;
+                else
+                    return 2;
+            }else
+                return -1;
+
+        }
+        twoVals():iterVal1(nullptr),iterVal2(nullptr), c(nullptr),posOrNeg(Instruction::Add){}
+    };
     struct condition{
         Value* controlVar;
+        Value* controlVar2;
         cmpSymbol sym;
         Value* c;
-        condition():controlVar(nullptr),sym(other),c(nullptr){}
+        Instruction::BinaryOps cPosOrNeg;
+        condition():controlVar(nullptr),controlVar2(nullptr),sym(other),c(nullptr),cPosOrNeg(Instruction::Add){}
         bool isEmpty(){
             if(controlVar==nullptr||c== nullptr)
                 return true;
@@ -63,7 +105,9 @@ namespace termloop {
             if(controlVar== nullptr)
                 errs()<<"Control Var Null!\r\n";
             else {
-                errs() << "Control Variable: " << controlVar->getName() << "\r\n";
+                errs() << "Control Variable x: " << controlVar->getName() << "\r\n";
+                if(controlVar2!= nullptr)
+                    errs()<<"Control Variable y: "<<controlVar2->getName()<<"\r\n";
                 errs() << "Symbole: " << (cmpSymbol) sym << "\r\n";
                 errs() << "C: " << *c << "\r\n";
             }
@@ -73,7 +117,7 @@ namespace termloop {
     //whether the var is changing in the loop iteration
     //coarse implementation
 
-    Value* isIterativeVar(Value* var, Loop* l);
+    twoVals isIterativeVar(Value* var, Loop* l);
     int isConstantValue(Value *v);
 
     //find the condition with the form x~c ~ is {<,<=,>,>=}

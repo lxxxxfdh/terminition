@@ -24,31 +24,40 @@ namespace termloop {
     class Path {
     public:
         bool pathAbove;
+        varIncrease con_var1;
+        varIncrease con_var2;
         monotonicity increase;
         satiType initialSat;
         Value *b;
-        Value *con_var;
+        //Value *con_var;
+        //Value *con_var2;
         Value* c1;
         cmpSymbol cmp;
         Loop* l;
         static DataLayout* DT;
         int step;
+        monotoneType  monotype;
         bool validForm;
         vector<BasicBlock *> edges;
 
-        Path(vector<BasicBlock *> *vb, Value *var,Loop* loop) : edges(*vb), con_var(var), l(loop) {
+        Path(vector<BasicBlock *> *vb, Value *var, Value* var2, Loop* loop) : edges(*vb), l(loop) {
+            con_var1.var=var;
+            con_var2.var=var2;
             step = UNOWN;
             increase = unknown;
             initialSat = nonfixed;
             validForm=true;
+            monotype=Irregular;
 
         }
 
-        Path(Value *var, cmpSymbol sym, vector<BasicBlock *> *vb,Loop* loop) : con_var(var), cmp(sym), edges(*vb),l(loop) {
+        Path(Value *var, cmpSymbol sym, vector<BasicBlock *> *vb,Loop* loop) : cmp(sym), edges(*vb),l(loop) {
+            con_var1.var=var;
             step = UNOWN;
             increase = unknown;
             initialSat = nonfixed;
             validForm=true;
+            monotype=Irregular;
         }
 
         BasicBlock *getPrev(BasicBlock *bb) {
@@ -88,7 +97,7 @@ namespace termloop {
 
 
         //find the x~c1
-        void branConditionHandle(vector<BasicBlock *> *outBlocks, Value* convar) {
+        void branConditionHandle(vector<BasicBlock *> *outBlocks, Value* conv,Value* convarValue) {
 
 
             ICmpInst* icmp=nullptr;
@@ -118,7 +127,7 @@ namespace termloop {
                         condition con=checkCond(icmp,tag,l);
 
                         //assert(con_var==con.controlVar);
-                        if(con_var!=con.controlVar||con.isEmpty()){
+                        if(conv!=con.controlVar||con.isEmpty()){
 
                             //errs()<<*con_var<<"  sss   "<<con.controlVar;
                             //con_var=nullptr;
@@ -143,7 +152,7 @@ namespace termloop {
 
                             }
                             //errs()<<*cv<<"\r\n"<<*con.c;
-                            ConstantInt *initial=dyn_cast<ConstantInt>(convar);
+                            ConstantInt *initial=dyn_cast<ConstantInt>(convarValue);
 
                             //errs()<<*initial<<"!!!!!!!!!!!!!!!!";
 
@@ -194,47 +203,79 @@ namespace termloop {
             }
         }
 
-        void computeIncrease(vector<BasicBlock *> *outBlocks, Value* cv, Value* convar) {
+        void computeIncrease(vector<BasicBlock *> *outBlocks, varIncrease* varInc, Value* convar) {  //(outBlocks,con_var,convar_value);
 
-            branConditionHandle(outBlocks,convar);
-            assert(cv==con_var&&"Check the consistance");
+
+           // branConditionHandle(outBlocks,convar);
             //errs()<<*con_var;
-            if (PHINode *phi = dyn_cast<PHINode>(con_var)) {
+            if (PHINode *phi = dyn_cast<PHINode>(varInc->var)) {
                 Value *v = getValueForPhi(phi);
                 assert(v != nullptr);
                 int change = 0;
-                bool isMul = false;
+                int isMul = 0; //0 add, 1 mul, 2 irreg
+                int iregV=0;
 
                 while (true) {
 
                   // errs() << *v << "\r\n";
                   //  errs()<<*con_var<<"\r\n";
-                    if (v == con_var) {
+                    if (v == varInc->var) {
 
-                        if (isMul) {
+                        if (isMul==1) {
                             //not consider the mul change symbol
-                            increase=unknown;
+                            varInc->increase=unknown;
                             if(ConstantInt* cons=dyn_cast<ConstantInt>(convar)){
-                                if(cons==0||change==0)
-                                    increase=constant;
+                                varInc->varValue=cons->getZExtValue();
+                                if(varInc->varValue==0||change==0)
+                                    varInc->increase=constant;
                                 else{
-                                    if(cons>0&&change>0)
-                                        increase=increasing;
-                                    if(cons<0&&change>0)
-                                        increase=decreasing;
+                                    if(varInc->varValue>0&&change>0)
+                                        varInc->increase=increasing;
+                                    if(varInc->varValue<0&&change>0)
+                                        varInc->increase=decreasing;
 
                                 }
 
                             }
-                            step=UNOWN;
+                            varInc->step=change;
+                            varInc->monoType=geometric;
                             break;
-                        } else {
+                        } else if(isMul==0){
 
-                            increase = change > 0 ? increasing : decreasing;
-                            step = abs(change);
+                            varInc->increase = change > 0 ? increasing : decreasing;
+                            varInc->step = abs(change);
+                            varInc->monoType=arithmetic;
+                            break;
+
+                        }else{
+                            varInc->increase=unknown;
+                            if(ConstantInt* cons=dyn_cast<ConstantInt>(convar)){
+                                varInc->varValue=cons->getZExtValue();
+                                if(change>0){
+                                    int var2=varInc->varValue*change+iregV;
+                                    if(var2>varInc->varValue) varInc->increase=increasing;
+                                    else if(var2==varInc->varValue) varInc->increase=constant;
+                                    else varInc->increase=decreasing;
+                                    /*
+                                    if(varInc->varValue>0&&iregV>0)
+                                        varInc->increase=increasing;
+                                    if(varInc->varValue>0&&iregV<0||varInc->varValue<0&&iregV>0){
+
+                                    }
+                                    if(varInc->varValue<0&&iregV<0)
+                                        varInc->increase=decreasing;*/
+                                }
+
+
+
+                            }
+                            varInc->step=change;
+                            varInc->v=iregV;
+                            varInc->monoType=Irregular;
                             break;
 
                         }
+
                     }
                     if (GetElementPtrInst* getEle=dyn_cast<GetElementPtrInst>(v)){
                         int changeVal=getOffsetForGep( gep_type_begin(getEle), gep_type_end(getEle));
@@ -242,8 +283,8 @@ namespace termloop {
                             v=getEle->getPointerOperand();
                             change=changeVal;
                         }else{
-                            step=UNOWN;
-                            increase=unknown;
+                            varInc->step=UNOWN;
+                            varInc->increase=unknown;
                             break;
                         }
 
@@ -286,7 +327,7 @@ namespace termloop {
                                     change += temp;
                                 }
                                 else {
-                                    errs()<<*con_var;
+                                    //errs()<<*cv;
                                     assert(false);
                                 }
                                 break;
@@ -302,11 +343,14 @@ namespace termloop {
                             }
                             case Instruction::Mul:{
                                 if (constT&&change ==0){
-                                    isMul=true;
+                                    isMul=1;
                                     change=temp;
-                                } else {
-                                    errs()<<*con_var;
-                                    assert(false);
+                                }else {
+                                    //errs()<<*cv;
+                                    iregV=change;
+                                    change=temp;
+                                    isMul=2;
+
                                 }
                                 break;
                             }
@@ -320,7 +364,7 @@ namespace termloop {
                         assert(v!= nullptr);
                     }else if(ConstantInt* cs=dyn_cast<ConstantInt>(v)){
                         b=cs;
-                        increase=constant;
+                        varInc->increase=constant;
                         break;
                     }else if(TruncInst* trunc=dyn_cast<TruncInst>(v)){
                         v=trunc->getOperand(0);
@@ -337,8 +381,8 @@ namespace termloop {
 
         void dump(){
             errs()<<"Above: "<<(bool)pathAbove<<"\r\n";
-            errs()<<"Condition: "<< con_var->getName()<<"  "<<cmp<<"  "<<*c1<<"\r\n";
-            errs()<<"Increase: "<<(monotonicity)increase<<"\r\n";
+            errs()<<"Condition: "<< con_var1.var->getName()<<"  "<<cmp<<"  "<<*c1<<"\r\n";
+            errs()<<"Increase: "<<(monotonicity)con_var1.increase<<"\r\n";
             errs()<<"b: "<<*b<<"\r\n";
         }
     };
@@ -348,9 +392,11 @@ namespace termloop {
     public:
         nodeType type;
         static Value *con_var;
+        static Value *con_var2;
+        static Value* convar2_value;
         static Value *convar_value;  //control variable value
         static Value *c;
-        static Value *c1;
+        static Instruction::BinaryOps cPosOrNeg;
         static Loop *l;
         //Value* b;
         static bool controlAbove;
@@ -360,18 +406,31 @@ namespace termloop {
         static vector<Path *> *paths;
         Result term;
         vector<Node *> next;
+        int result;  //if this is a result node, the result is recroded.
 
 
-        Node(nodeType t) : type(t) { term = Result::nosupport; }
+        Node(nodeType t) : type(t) { term = Result::nosupport; result=UNOWN; }
+        Node(nodeType t, int res) : type(t), result(res) { term = Result::nosupport; }
 
         Node *(*chooseNext)(Node *);
 
         static void monotonicCompute() {
             for (vector<Path *>::iterator it = paths->begin(); it != paths->end(); it++) {
                 Path *p = *it;
-                if(p->increase==unknown)
-                    p->computeIncrease(outBlocks,con_var,convar_value);
+                if(p->con_var1.increase==unknown) {
+                    p->computeIncrease(outBlocks, &p->con_var1, Node::convar_value);
+                    // the default increase
+                    p->increase = p->con_var1.increase;
+                    p->step = p->con_var1.step;
+                    p->monotype = p->con_var1.monoType;
+
+                    p->branConditionHandle(outBlocks, con_var, convar_value);
+                }
                 //p->dump();
+
+
+                if(Node::con_var2!=nullptr&&p->con_var2.increase==unknown)
+                    p->computeIncrease(outBlocks,&p->con_var2,Node::convar2_value);
 
 
             }

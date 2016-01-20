@@ -13,38 +13,72 @@ bool  termloop::isAlliterator(gep_type_iterator I,  gep_type_iterator E, Loop* l
     for(; I != E; ++I)
     {
         Value* v=I.getOperand();
-       if(isIterativeVar(v,l))
+        int type=isIterativeVar(v,l).getType();
+       if(type!=-1)
            return  true;
 
     }
     return  false;
 }
-Value* termloop::isIterativeVar(Value* var, Loop* l){
+twoVals termloop::isIterativeVar(Value* var, Loop* l){
+    twoVals tv;
     if(Instruction* ins=dyn_cast<Instruction>(var)){
         if(!l->contains(ins))
-            return nullptr;
+            return tv;
     }
     if(SExtInst* sin=dyn_cast<SExtInst>(var))
         return isIterativeVar(sin->getOperand(0),l);
-    if(isa<PHINode>(var))
-        return var;
+    if(isa<PHINode>(var)){
+        tv.iterVal1=var;
+        return tv;
+    }
     if(ZExtInst* zin=dyn_cast<ZExtInst>(var))
         return  isIterativeVar(zin->getOperand(0),l);
     if(BinaryOperator* bop=dyn_cast<BinaryOperator>(var)){ //for the while(i-=12>=2)
         Value* op1=bop->getOperand(0);
         Value* op2=bop->getOperand(1);
-        if(isIterativeVar(op1,l)&&!isIterativeVar(op2,l))
-            return op1;
-        if(!isIterativeVar(op1,l)&&isIterativeVar(op2,l))
-            return op2;
+        Instruction::BinaryOps bops=bop->getOpcode();
+        twoVals tv1=isIterativeVar(op1,l);
+        twoVals tv2=isIterativeVar(op2,l);
+        int tv1Type=tv1.getType(), tv2Type=tv2.getType();  //-1: no iterval, 0: x-y  ,1 :x, 2: x+c
+        if(tv1Type==1&&tv2Type==1){
+            if(bops!=Instruction::Sub){
+                assert(false&&"Unsupport loop form");
+            }
+            tv.iterVal1=tv1.iterVal1;
+            tv.iterVal2=tv2.iterVal1;
+            return tv;
+        }
+        if(tv1Type==1&&tv2Type==-1){
+            tv.iterVal1=tv1.iterVal1;
+            tv.c=tv2.c;
+            tv.posOrNeg=bops;
+            return tv;
+        }
+        if(tv1Type==0&&tv2Type==-1){
+            tv.iterVal1=tv1.iterVal1;
+            tv.iterVal2=tv1.iterVal2;
+            tv.c=tv2.c;
+            tv.posOrNeg=bops;
+            return tv;
+        }
+        if(tv1Type==-1&&tv2Type==-1){
+            tv.c=var;
+            return tv;
+        }
+        errs()<<tv1Type<<"   "<<tv2Type<<"  \m";
+        assert(false&&"Unsupport loop form");
     }
     if(GetElementPtrInst* getEle=dyn_cast<GetElementPtrInst>(var)){ //char  *-3 or
         Value* base=getEle->getOperand(0);
-        if(isIterativeVar(base,l)&&!isAlliterator(gep_type_begin(getEle), gep_type_end(getEle),l))
-            return base;
+        twoVals tv1=isIterativeVar(base,l);
+        if(tv1.getType()==1&&!isAlliterator(gep_type_begin(getEle), gep_type_end(getEle),l)){
+            tv.iterVal1=base;
+            return tv;
+        }
     }
-
-        return nullptr;
+    tv.c=var;
+        return tv;
 }
 int termloop::isConstantValue(Value *v) {
 
@@ -101,39 +135,48 @@ struct condition  termloop::checkCond(ICmpInst* inst, int tag, Loop* l){
                              {cmpSymbol::lt,cmpSymbol::gt,cmpSymbol::gt,cmpSymbol::get,cmpSymbol::other}};
 
     condition cond;
-    Value* vv1=isIterativeVar(v1,l);
-    Value* vv2=isIterativeVar(v2,l);
+    twoVals tv1=isIterativeVar(v1,l);
+    twoVals tv2=isIterativeVar(v2,l);
+    int type1=tv1.getType(), type2=tv2.getType();  //-1: no iterval, 0: x-y  ,1 :x, 2: x+c
+    cmpSymbol  cm;
 
-    if(vv1!=nullptr&&vv2== nullptr){
-       // errs()<<*vv1;
-        cond.controlVar=vv1;
-        cond.c=v2;
-        cmpSymbol  cm;
-        cond.controlVar=vv1;
-        cond.c=v2;
-        switch (inst->getPredicate()){
-            case ICmpInst::ICMP_UGE:
-            case ICmpInst::ICMP_SGE:
-                cm=cmpSymbol::get;
-                break;
-            case ICmpInst::ICMP_ULT:
-            case ICmpInst::ICMP_SLT:
-                cm=cmpSymbol::lt;
-                break;
-            case ICmpInst::ICMP_ULE:
-            case ICmpInst::ICMP_SLE:
-                cm=cmpSymbol::let;
-                break;
-            case ICmpInst::ICMP_UGT:
-            case ICmpInst::ICMP_SGT:
-                cm=cmpSymbol::gt;
-                break;
-            default:
-                cm=cmpSymbol::other;
-        }
-        cond.sym=conData[tag][cm];
-
+    if(type1==1&&type2==-1){//x~c
+        cond.controlVar=tv1.iterVal1;
+        cond.c=tv2.c;
+    }else if(type1==1&&type2==2){//x~y+c
+        cond.controlVar=tv1.iterVal1;
+        cond.controlVar2=tv2.iterVal1;
+        cond.c=tv2.c;
+        cond.cPosOrNeg=tv2.posOrNeg;
+    }else if(type1==0&&type2==-1){//x-y~c
+        cond.controlVar=tv1.iterVal1;
+        cond.controlVar2=tv1.iterVal2;
+        cond.c=tv2.c;
+        cond.cPosOrNeg=Instruction::Add;
+    }else{
+        assert(false&&"Unsupport loop form");
     }
+    switch (inst->getPredicate()){
+        case ICmpInst::ICMP_UGE:
+        case ICmpInst::ICMP_SGE:
+            cm=cmpSymbol::get;
+            break;
+        case ICmpInst::ICMP_ULT:
+        case ICmpInst::ICMP_SLT:
+            cm=cmpSymbol::lt;
+            break;
+        case ICmpInst::ICMP_ULE:
+        case ICmpInst::ICMP_SLE:
+            cm=cmpSymbol::let;
+            break;
+        case ICmpInst::ICMP_UGT:
+        case ICmpInst::ICMP_SGT:
+            cm=cmpSymbol::gt;
+            break;
+        default:
+            cm=cmpSymbol::other;
+    }
+    cond.sym=conData[tag][cm];
     return cond;
 
 }

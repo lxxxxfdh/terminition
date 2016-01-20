@@ -8,8 +8,11 @@ using namespace termloop;
 vector<Path*>* termloop::Node::paths=new vector<Path*>();
 vector<BasicBlock*>* termloop::Node::outBlocks=new vector<BasicBlock*>();
 Value* termloop::Node::con_var=nullptr;
+Value* termloop::Node::con_var2=nullptr;
 Value* termloop::Node::c= nullptr;
 Value* Node::convar_value=nullptr;
+Value* Node::convar2_value=nullptr;
+Instruction::BinaryOps Node::cPosOrNeg=Instruction::Add;
 Loop* Node::l=nullptr;
 bool termloop::Node::controlAbove=true;
 cmpSymbol Node::cmp=other;
@@ -351,17 +354,136 @@ Node* consAndConsSplit(Node* pa){
                     return pa->next[1];
     return pa->next[0];
 }
+Node* newSinglSplit(Node* pa){
+     if(Node::con_var2!=nullptr)
+         return pa->next[0];
+     else
+         return pa->next[1];
+}
+bool algo2(int x0,int y0,int u1, int u2,int v, cmpSymbol cmp, int tag){
+    int x,y,n=1;
+
+    return true;
+
+}
+bool algo1(int x0,int y0,int u1, int u2,int v, cmpSymbol cmp, int tag){
+    int x,y,n=1;
+
+    return true;
+
+}
+
+Node* gapSplit(Node* pa){
+    Path *p=*Node::paths->begin();
+    varIncrease var1=p->con_var1;
+    varIncrease var2=p->con_var2;
+    monotonicity  mo1=var1.increase;
+    monotonicity  mo2=var2.increase;
+    monotoneType type1=var1.monoType;
+    monotoneType type2=var2.monoType;
+
+    if(mo1==unknown||mo2==unknown)
+        p->increase=unknown;
+    if(mo1==increasing&&mo2==decreasing){
+        p->increase=increasing;
+
+    }
+
+    if(mo1==decreasing&&mo2==increasing){
+        p->increase=decreasing;
+
+    }
+    if(mo1==increasing&& mo2==increasing){
+        if(type1==type2&&(type1==arithmetic||type1==geometric)){
+            if(var1.step>var2.step)
+                p->increase=increasing;
+            if(var1.step==var2.step){
+                if(type1==arithmetic) p->increase=constant;
+                if(type1==geometric) {
+                    if(var1.varValue>var2.varValue) p->increase=increasing;
+                    if(var1.varValue==var2.varValue) p->increase=constant;
+                    if(var1.varValue<var2.varValue) p->increase=decreasing;
+                }
+            }
+            if(var1.step<var2.step)
+                p->increase=decreasing;
+
+        }
+        if(type1==arithmetic&&(type2==geometric||type2==Irregular)) p->increase=decreasing;
+        if((type1==geometric||type1==Irregular)&&type2==arithmetic) p->increase=increasing;
+        if(type1==geometric&&type2==Irregular){
+            //Algo2
+            bool result=algo2(var1.varValue,var2.varValue,var1.step,var2.step,var2.v,Node::cmp,1);
+            if(result)
+                return pa->next[1];
+            else
+                return pa->next[2];
+        }
+        if(type1==Irregular&&type2==geometric){
+            bool result=algo2(var1.varValue,var2.varValue,var1.step,var2.step,var2.v,Node::cmp,1);
+            if(result)
+                return pa->next[1];
+            else
+                return pa->next[2];
+        }
+        if(type1==Irregular&&type2==Irregular){
+            //?????????
+            assert(false&&"don't know");
+        }
+    }
+    if(mo1==decreasing&& mo2==decreasing){
+        if(type1==type2&&(type1==arithmetic||type1==geometric)){
+            if(var1.step<var2.step)
+                p->increase=increasing;
+            if(var1.step==var2.step){
+                if(type1==arithmetic) p->increase=constant;
+                if(type1==geometric) {
+                    if(var1.varValue>var2.varValue) p->increase=increasing;
+                    if(var1.varValue==var2.varValue) p->increase=constant;
+                    if(var1.varValue<var2.varValue) p->increase=decreasing;
+                }
+            }
+            if(var1.step>var2.step)
+                p->increase=decreasing;
+
+        }
+        if(type1==arithmetic&&(type2==geometric||type2==Irregular));  //need algo1
+        if((type1==geometric||type1==Irregular)&&type2==arithmetic);  //need algo1
+        if(type1==geometric&&type2==Irregular){    //need algo2
+            //Algo2
+            bool result=algo2(var1.varValue,var2.varValue,var1.step,var2.step,var2.v,Node::cmp,1);
+            if(result)
+                return pa->next[1];
+            else
+                return pa->next[2];
+        }
+        if(type1==Irregular&&type2==geometric){  //need algo2
+            bool result=algo2(var1.varValue,var2.varValue,var1.step,var2.step,var2.v,Node::cmp,1);
+            if(result)
+                return pa->next[1];
+            else
+                return pa->next[2];
+        }
+        if(type1==Irregular&&type2==Irregular){
+            //?????????
+            assert(false&&"don't know");
+        }
+
+    }
+    return pa->next[0];
+}
 Node* termloop::constructTree(){
 
     Node*root= new Node(nodeType::pathnum);
-    Node*singlePath= new Node(nodeType::controlabove);
+
+    Node* singlePath= new Node(nodeType::monotonic);
     Node*twoPath=new Node(nodeType::monotonic);
     Node* multiPaths=new Node(nodeType::monotonic);
     Node*unsupport=new Node(nodeType::unsupport);
 
-    Node* terminate=new Node(nodeType::result);
-    Node* unTerminate=new Node(nodeType::result);
-    Node* unknown=new Node(nodeType::result);
+    Node* terminate=new Node(nodeType::result,2);
+    Node* unTerminate=new Node(nodeType::result,3);
+    Node* unknown=new Node(nodeType::result,0);
     terminate->chooseNext=termOutput;
     unTerminate->chooseNext=nonTermOutput;
     unknown->chooseNext=unknownTermOut;
@@ -370,13 +492,22 @@ Node* termloop::constructTree(){
     root->next.push_back(multiPaths);
     root->chooseNext=pathNumSplit;
 
+    Node*gapfree= new Node(nodeType::controlabove);
+    Node* gapinclude=new Node(nodeType::empty);
+    singlePath->next.push_back(gapinclude);
+    singlePath->next.push_back(gapfree);
+    singlePath->chooseNext=newSinglSplit;
 
+    gapinclude->next.push_back(gapfree);
+    gapinclude->next.push_back(terminate);
+    gapinclude->next.push_back(unTerminate);
+    gapinclude->chooseNext=gapSplit;
 
     Node *singleAbove=new Node(nodeType::monotonic);
     Node *singleBelow=new Node(nodeType::monotonic);
-    singlePath->next.push_back(singleAbove);
-    singlePath->next.push_back(singleBelow);
-    singlePath->chooseNext=singlePathSplit;
+    gapfree->next.push_back(singleAbove);
+    gapfree->next.push_back(singleBelow);
+    gapfree->chooseNext=singlePathSplit;
 
 
 
